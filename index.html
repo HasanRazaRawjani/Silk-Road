@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Silk Road</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f; --panel:rgba(12,16,26,.72); --line:rgba(242,193,78,.28);
+    --gold:#f2c14e; --gold2:#ffdf8a; --teal:#4fb8b0; --terra:#d0714a;
+    --text:#e9e4d8; --muted:#a49d8e;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{height:100%;overflow:hidden}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:Cinzel,Georgia,serif;font-weight:700;letter-spacing:.04em;margin:0}
+  a{color:var(--gold)}
+
+  /* ---------- HERO ---------- */
+  #hero{position:relative;height:100vh;height:100svh;min-height:560px;overflow:hidden;background:#000}
+  #globe{position:absolute;inset:0}
+  #globe canvas{display:block}
+  #labels{position:absolute;inset:0;pointer-events:none}
+  .overlay{position:absolute;inset:0;pointer-events:none;z-index:5}
+  .overlay .ctl, .overlay button, .overlay a{pointer-events:auto}
+  #hero::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+    background:linear-gradient(90deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.12) 28%,rgba(0,0,0,0) 48%)}
+
+  .left-col{position:absolute;left:40px;top:28px;bottom:28px;width:390px;display:flex;flex-direction:column;gap:18px}
+  .title h1{font-size:46px;line-height:1.02;color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.7)}
+  .title h1 span{color:var(--gold)}
+  .title .tag{font-family:Cinzel,serif;font-size:19px;color:var(--gold2);margin-top:10px;line-height:1.3;text-shadow:0 1px 3px #000,0 0 14px rgba(0,0,0,.8)}
+  .title .sub{font-size:14px;color:#cfc8b8;margin-top:10px;max-width:360px;text-shadow:0 1px 8px #000}
+  .spacer{flex:1;min-height:0}
+
+  #info{display:none;background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+        border:1px solid var(--line);border-radius:14px;padding:16px 18px 14px;max-height:100%;overflow:auto;position:relative}
+  #info.open{display:block;animation:pop .35s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  #info .kicker{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  #info h3{font-size:21px;color:#fff;margin:4px 0 6px}
+  #info p{margin:0 0 8px;font-size:13.5px;color:#d9d3c5}
+  #info .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  #info .chip{font-size:11.5px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--gold2)}
+  #info-close{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
+
+  .controls{display:flex;flex-direction:column;gap:12px}
+  .fly{display:flex;flex-wrap:wrap;gap:8px}
+  .fly button{font:500 13px Inter,sans-serif;color:var(--text);background:rgba(14,18,28,.75);border:1px solid rgba(255,255,255,.16);
+     padding:9px 14px;border-radius:99px;cursor:pointer;transition:.2s;backdrop-filter:blur(6px)}
+  .fly button:hover{border-color:var(--gold);color:#fff}
+  .fly button.active{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+  .fly button[data-fly="silk"]{border-color:rgba(242,193,78,.6)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;background:rgba(10,13,20,.6);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:9px 12px;width:max-content;max-width:100%}
+  .legend .ttl{font-size:10.5px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;width:100%}
+  .legend label{display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer;pointer-events:auto;user-select:none}
+  .legend input{appearance:none;color:inherit;background:transparent;width:14px;height:14px;border-radius:3px;border:1.5px solid currentColor;margin:0;display:grid;place-content:center;cursor:pointer}
+  .legend input:checked::after{content:"";width:8px;height:8px;border-radius:1px;background:currentColor}
+  .legend .sw{width:22px;height:3px;border-radius:2px}
+  .legend label.off span{opacity:.45;text-decoration:line-through}
+
+  #hint{position:absolute;right:34px;bottom:24px;font-size:11.5px;color:var(--muted);z-index:6;text-align:right}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;z-index:4;color:var(--gold2);font-family:Cinzel,serif;letter-spacing:.3em;font-size:13px;transition:opacity .8s}
+  #loading.done{opacity:0;pointer-events:none}
+
+  /* City labels (CSS2D) */
+  .lbl{width:0;height:0;position:relative}
+  .lbl b{position:absolute;left:9px;top:-10px;white-space:nowrap;font:500 11.5px Inter,sans-serif;color:#f4efe2;
+     padding:2px 7px;border-radius:5px;background:rgba(8,10,16,.62);border:1px solid rgba(255,255,255,.12);
+     text-shadow:0 1px 2px #000;transition:opacity .3s, transform .3s;cursor:pointer;pointer-events:auto}
+  .lbl.silk b{color:#ffe7a8;border-color:rgba(242,193,78,.45);font-weight:600}
+  .lbl.indian b{color:#bfe9e4;border-color:rgba(79,184,176,.35)}
+  .lbl.sahara b{color:#f3c6b0;border-color:rgba(208,113,74,.4)}
+  .lbl.hide b{opacity:0;pointer-events:none;transform:translateY(3px)}
+  .lbl.hot b{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+  .lbl.left b{left:auto;right:9px}
+
+  /* ---------- SECTIONS ---------- */
+  section.pg{max-width:1120px;margin:0 auto;padding:90px 28px 30px}
+  .eyebrow{font-size:11.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+  section.pg h2{font-size:34px;color:#fff;margin-bottom:10px}
+  section.pg .lead{color:var(--muted);max-width:680px;margin:0 0 34px}
+  .grid{display:grid;gap:20px}
+  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;position:relative}
+  .card .num{font-family:Cinzel,serif;color:var(--gold);font-size:13px;letter-spacing:.2em}
+  .card h3{font-size:19px;color:#fff;margin:8px 0 10px;line-height:1.25}
+  .card p{margin:0 0 12px;color:#cfc8b8;font-size:14.5px}
+  .card .cmp{border-top:1px solid var(--line);padding-top:12px;font-size:13.5px;color:var(--muted)}
+  .card .cmp strong{color:var(--gold2);font-weight:600}
+  .card .cmp p{margin:8px 0 0;color:var(--muted);font-size:13.5px;line-height:1.5}
+  .edit{position:absolute;top:14px;right:14px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7c7568;border:1px dashed #4a463e;border-radius:6px;padding:2px 6px}
+  .aud .icon{font-size:26px;width:48px;height:48px;border-radius:12px;display:grid;place-items:center;background:rgba(242,193,78,.1);border:1px solid var(--line);margin-bottom:12px}
+  .aud .need{font-size:12px;color:var(--gold2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+  .tablewrap{overflow-x:auto;border:1px solid rgba(255,255,255,.08);border-radius:16px}
+  table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+  th,td{padding:14px 16px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(255,255,255,.06)}
+  thead th{font-family:Cinzel,serif;font-size:15px;letter-spacing:.05em;background:rgba(255,255,255,.03)}
+  thead th.silk{color:var(--gold);background:rgba(242,193,78,.09)} thead th.io{color:var(--teal)} thead th.ts{color:var(--terra)}
+  td.silk{background:rgba(242,193,78,.045);color:#f1ead8}
+  tbody th{color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.12em;text-transform:uppercase;width:130px}
+  td{color:#cbc4b4}
+  .quote{font-family:Cinzel,serif}
+  .quote blockquote{margin:6px 0 16px;font-family:Georgia,serif;font-style:italic;font-size:17px;color:#efe8d6;line-height:1.5}
+  .quote blockquote::before{content:"\201C";font-size:54px;color:var(--gold);line-height:0;vertical-align:-22px;margin-right:4px}
+  .quote .src{font-family:Inter,sans-serif;font-size:13px;color:var(--gold2)}
+  .quote .src small{display:block;color:var(--muted);font-size:12px}
+  footer{margin-top:80px;border-top:1px solid rgba(255,255,255,.08);padding:34px 28px 50px;text-align:center;color:var(--muted);font-size:13px}
+  footer .f1{font-family:Cinzel,serif;color:var(--gold);font-size:16px;letter-spacing:.15em;margin-bottom:6px}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:1000px){ .g4{grid-template-columns:repeat(2,1fr)} #hint{display:none} }
+  @media (max-width:760px){
+    #hero::after{background:linear-gradient(180deg,rgba(0,0,0,.6) 0%,rgba(0,0,0,0) 22%),linear-gradient(0deg,rgba(7,9,15,.95) 0%,rgba(7,9,15,0) 30%)}
+    .left-col{left:14px;right:14px;top:16px;bottom:14px;width:auto;gap:10px}
+    .title{text-align:center}
+    .title h1{font-size:30px}
+    .title .tag{font-size:14.5px;margin-top:6px}
+    .title .sub{display:none}
+    #info{position:absolute;left:0;right:0;bottom:0;max-height:52vh;z-index:3;background:rgba(10,13,20,.94)}
+    .fly{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .fly button{padding:9px 6px;font-size:12.5px}
+    .legend{width:100%;justify-content:space-between;gap:6px 8px;padding:8px 10px}
+    .legend label{font-size:11.5px;gap:5px}
+    .legend .sw{width:12px}
+    .lbl b{font-size:10.5px;padding:1px 5px}
+  }
+  .mobile-more{display:none;text-align:center;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold2);text-decoration:none;padding:2px}
+  /* Planet labels (tiny, muted, desktop only; off by default via SHOW_PLANET_LABELS) */
+  .plbl{width:0;height:0;position:relative;pointer-events:none}
+  .plbl span{position:absolute;left:0;top:0;transform:translateX(-50%);white-space:nowrap;font:500 9px Inter,sans-serif;letter-spacing:.28em;text-transform:uppercase;
+     color:rgba(255,255,255,.42);transition:opacity .4s}
+  .plbl.hide span{opacity:0}
+  /* Facts & figures (dark glass stat strip) */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:24px}
+  .stat{background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:22px 22px 20px}
+  .stat .big{font-family:Cinzel,serif;font-weight:700;font-size:38px;line-height:1;color:#fff;letter-spacing:.02em}
+  .stat .big small{font-size:16px;margin-left:6px;color:var(--gold)}
+  .stat .what{font-size:13.5px;color:var(--muted);margin-top:10px}
+  @media (max-width:1000px){ .stats{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:760px){ .stats{gap:12px} .stat{padding:16px} .stat .big{font-size:28px} }
+
+  /* =====================================================================
+     UI: day/night, goods, timeline, claims/testimonials side panel
+     ===================================================================== */
+  .modes{display:flex;flex-wrap:wrap;gap:8px}
+  .modes button{font:600 12.5px Inter,sans-serif;color:var(--gold2);background:rgba(242,193,78,.08);border:1px solid rgba(242,193,78,.45);
+     padding:8px 13px;border-radius:10px;cursor:pointer;transition:.2s;backdrop-filter:blur(6px);display:inline-flex;align-items:center;gap:6px}
+  .modes button:hover{background:rgba(242,193,78,.18);color:#fff}
+  .modes button[aria-pressed="true"]{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+  .modes .ic{font-size:13px;line-height:1}
+
+  /* Timeline scrubber */
+  .timeline{background:rgba(10,13,20,.6);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:9px 12px 8px;max-width:390px}
+  .timeline .ttl{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+  .timeline .ttl b{font-weight:600;color:var(--gold2);letter-spacing:.12em}
+  #era-all{font:600 10.5px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:2px 9px;cursor:pointer}
+  #era-all.on{color:#1a1405;background:var(--gold2);border-color:var(--gold2)}
+  #era-range{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;margin:0;cursor:pointer}
+  #era-range::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,#c9894a,#f2c14e 40%,#e8d9a8 70%,#7fb3c8)}
+  #era-range::-moz-range-track{height:4px;border-radius:4px;background:linear-gradient(90deg,#c9894a,#f2c14e 40%,#e8d9a8 70%,#7fb3c8)}
+  #era-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-7px;border-radius:50%;background:#fff6dc;border:3px solid var(--gold);box-shadow:0 0 12px rgba(242,193,78,.6)}
+  #era-range::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff6dc;border:3px solid var(--gold)}
+  .timeline.all #era-range::-webkit-slider-thumb{background:#555;border-color:#888;box-shadow:none}
+  .timeline.all #era-range::-webkit-slider-runnable-track{opacity:.45}
+  .ticks{display:flex;justify-content:space-between;margin-top:1px}
+  .ticks button{font:500 11.5px Inter,sans-serif;color:var(--muted);background:none;border:0;padding:2px 2px;cursor:pointer;min-width:44px}
+  .ticks button:first-child{text-align:left} .ticks button:last-child{text-align:right}
+  .ticks button.on{color:var(--gold2);font-weight:600}
+  .ticks small{display:block;font-size:9.5px;color:#7d776b;font-weight:400}
+
+  /* Goods legend (shown when goods flow is on) */
+  .goods-legend{display:none;width:100%;gap:10px;font-size:12px;color:#d9d3c5;padding-top:4px;border-top:1px solid rgba(255,255,255,.07);margin-top:2px}
+  .goods-legend.on{display:flex;flex-wrap:wrap}
+  .goods-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px;box-shadow:0 0 8px currentColor}
+
+  /* Era banner */
+  #era-banner{position:absolute;top:70px;left:61%;transform:translate(-50%,-6px);text-align:center;opacity:0;transition:.4s;z-index:6;pointer-events:none;
+     background:rgba(8,10,16,.66);border:1px solid var(--line);border-radius:12px;padding:8px 16px;backdrop-filter:blur(8px);max-width:min(460px,80vw)}
+  #era-banner.show{opacity:1;transform:translate(-50%,0)}
+  #era-banner b{display:block;font-family:Cinzel,serif;font-size:16px;letter-spacing:.08em;color:var(--gold2)}
+  #era-banner span{display:block;font-size:12.5px;color:#d9d3c5;line-height:1.4;margin-top:2px}
+
+  /* Cinematic letterbox bars (city fly-ins) */
+  #letterbox i{position:absolute;left:0;right:0;height:0;background:#000;z-index:3;pointer-events:none;transition:height .7s cubic-bezier(.6,0,.2,1)}
+  #letterbox i:first-child{top:0} #letterbox i:last-child{bottom:0}
+  body.cine #letterbox i{height:6.5vh}
+  body.cine #letterbox i:first-child{box-shadow:0 1px 0 rgba(242,193,78,.35)} body.cine #letterbox i:last-child{box-shadow:0 -1px 0 rgba(242,193,78,.35)}
+
+
+  /* Top-right toolbar: sound (muted by default) */
+  #toolbar{position:absolute;top:26px;right:34px;display:flex;gap:8px;z-index:7;pointer-events:auto}
+  #toolbar button{font:600 12px Inter,sans-serif;color:#e9e4d8;background:rgba(10,13,20,.72);border:1px solid rgba(255,255,255,.18);
+     padding:7px 12px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;backdrop-filter:blur(6px);transition:.2s}
+  #toolbar button:hover{border-color:var(--gold);color:#fff}
+  #toolbar button .ic{font-size:14px;line-height:1}
+  #btn-sound[aria-pressed="true"]{border-color:var(--gold);color:var(--gold2);box-shadow:0 0 0 3px rgba(242,193,78,.12)}
+  @media (max-width:760px){
+    #toolbar{top:16px;right:10px}
+    #toolbar button{width:38px;height:38px;padding:0;justify-content:center}
+    #toolbar button .tx{display:none}
+  }
+
+  /* Full-height left claims / testimonials panel */
+  #sidepanel{position:absolute;left:0;top:0;bottom:0;width:min(420px,92vw);z-index:12;pointer-events:none;
+     transform:translateX(-105%);transition:transform .38s cubic-bezier(.4,0,.2,1);
+     background:linear-gradient(180deg,rgba(12,16,26,.96),rgba(8,10,18,.97));border-right:1px solid var(--line);
+     box-shadow:12px 0 48px rgba(0,0,0,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+     display:flex;flex-direction:column}
+  #sidepanel.open{transform:none;pointer-events:auto}
+  #sidepanel .sp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 18px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+  #sidepanel .sp-kicker{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin:0 0 4px}
+  #sidepanel .sp-head h2{font-size:20px;color:#fff;margin:0;line-height:1.2}
+  #sidepanel .sp-close{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#d9d3c5;width:34px;height:34px;border-radius:50%;font-size:20px;line-height:1;cursor:pointer;flex-shrink:0}
+  #sidepanel .sp-close:hover{border-color:var(--gold);color:#fff}
+  #sidepanel .sp-body{flex:1;overflow:auto;padding:18px 20px 14px}
+  #sidepanel .sp-num{font-family:Cinzel,serif;font-size:12px;letter-spacing:.2em;color:var(--gold);margin-bottom:6px}
+  #sidepanel .sp-title{font-family:Cinzel,serif;font-size:22px;color:#fff;margin:0 0 12px;line-height:1.25}
+  #sidepanel .sp-text{font-size:14.5px;color:#e6e0d2;margin:0 0 14px;line-height:1.55}
+  #sidepanel .sp-cmp{border-top:1px solid var(--line);padding-top:12px;font-size:13.5px;color:var(--muted)}
+  #sidepanel .sp-cmp strong{color:var(--gold2);font-weight:600;display:block;margin-bottom:8px}
+  #sidepanel .sp-cmp p{margin:0 0 10px;color:#cfc8b8;font-size:13.5px;line-height:1.55}
+  #sidepanel .sp-quote{font-family:Georgia,serif;font-style:italic;font-size:16px;color:#efe8d6;line-height:1.55;margin:0 0 16px}
+  #sidepanel .sp-quote::before{content:"\201C";font-size:42px;color:var(--gold);line-height:0;vertical-align:-18px;margin-right:4px}
+  #sidepanel .sp-src{font-size:13px;color:var(--gold2)}
+  #sidepanel .sp-src small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+  #sidepanel .sp-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,.08)}
+  #sidepanel .sp-nav{display:flex;align-items:center;gap:10px}
+  #sidepanel .sp-nav button{font:600 13px Inter,sans-serif;color:var(--text);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);
+     width:38px;height:38px;border-radius:50%;cursor:pointer;transition:.2s}
+  #sidepanel .sp-nav button:hover:not([disabled]){border-color:var(--gold);color:#fff}
+  #sidepanel .sp-nav button[disabled]{opacity:.28;cursor:default}
+  #sidepanel .sp-page{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  body.panel-open .left-col .title{opacity:.15;pointer-events:none;transition:.3s}
+  body.panel-open .controls{opacity:.35}
+
+  /* ---------- RESPONSIVE (features) ---------- */
+  @media (max-width:1000px){
+    #era-banner{left:50%}
+  }
+  @media (max-width:760px){
+    .modes{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .modes button{justify-content:center;padding:8px 4px;font-size:12px}
+    .modes .lg{display:none}
+    .fly{grid-template-columns:repeat(6,1fr) !important}
+    .fly button{grid-column:span 2}
+    .fly button[data-fly="overview"]{grid-column:span 6 !important}
+    .fly button{padding:8px 4px;font-size:12px}
+    .timeline{max-width:none;padding:7px 10px 6px}
+    .ticks small{display:none}
+    #era-banner{top:92px;width:calc(100% - 40px);padding:6px 10px}
+    #era-banner b{font-size:13.5px} #era-banner span{font-size:11.5px}
+    body.cine #letterbox i{height:4.5vh}
+    #sidepanel{width:min(100vw,100%)}
+    body.panel-open .controls{opacity:0;pointer-events:none}
+  }
+</style>
+
+<!-- Three.js r160 via import map (works when the file is double-clicked) -->
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+
+<!-- ================= HERO: 3D GLOBE (fullscreen) ================= -->
+<header id="hero">
+  <div id="globe"></div>
+  <div id="labels"></div>
+  <div id="loading">LOADING THE WORLD&hellip;</div>
+  <div id="letterbox" aria-hidden="true"><i></i><i></i></div>
+
+  <!-- Hidden editable claim / testimonial source (feeds the left panel) -->
+  <div id="claim-source" hidden>
+  <article class="claim-data" data-i="0" hidden>
+    <div class="num">CLAIM I</div>
+    <h3>Safer trade route</h3>
+    <p class="claim">The silk road is a safer trade route because traders can avoid the dangerous ocean strom and monsoons that are hard to predict.</p>
+    <div class="cmp"><strong>Compared to&hellip;</strong><p>Compared to the Indian Ocean trade route, the Silk Road does not depend on the seasonal monsoons and dangerous sea travel. Indian Ocean trade route merchants need to plan around the seasonal monsoons since the winds and storms can easily wreck their ships losing all resources. Even if there are no monsoons there can always be storms like heavy rains or floods that cause ships to break when trading on the water. The silk road merchants have a much safer and more reliable experience when trading since there are no monsoons and harsh ocean weather conditions.</p><p>Also compared to the Trans - Saharan trade route, the Silk road does not depend on harsh weather conditions like a dry desert and sandstorms. Merchants would have to cross massive stretches in the extreme heat of the Sahara, due to the heat, water was a rare occurrence making merchants very thirsty and travel was very difficult due to the sand terrain. On the other hand the Silk Road is much more simple for merchants to traverse since there are rest stops throughout the trade route, and the land is not as dry and does not lack water.</p></div>
+  </article>
+  <article class="claim-data" data-i="1" hidden>
+    <div class="num">CLAIM II</div>
+    <h3>More civilizations connected</h3>
+    <p class="claim">The Silk Road connected more major civilizations and trading centers which gives merchants more opportunities to trade compared to other trade routes.</p>
+    <div class="cmp"><strong>Compared to&hellip;</strong><p>Compared to the Trans-Saharan, the Silk Road was far more connected to central civilizations. The Trans-Saharan trade routes connected kingdoms, but the kingdoms were very spread out and small in a relative manner. Most of these kingdoms did not have many goods due to their small size meaning they weren’t good to trade with on a major scale. The cities that were accessible to trade with on the Indian ocean were mostly port cities that couldn’t be accessed without ships and the major empires were more inland which wasn't easily accessible with a ship. The Silk Road had cities that were all accessible within the trade route that provided shelter and resources.</p></div>
+  </article>
+  <article class="claim-data" data-i="2" hidden>
+    <div class="num">CLAIM III</div>
+    <h3>Exclusive goods, higher profit</h3>
+    <p class="claim">The Silk Road traded more items and exclusive items like silk that were more luxurious that were exclusive to the Silk road and therefore are higher profit while also providing trade for a large variety of items</p>
+    <div class="cmp"><strong>Compared to&hellip;</strong><p>The Trans-Saharan trade was solely based on products like gold, salt, and ivory therefore merchants don't have as much free will to sell their product. Because of the lack of variety in trading goods, if one item’s price dropped it would be catastrophic for merchants selling it because they have no other goods to diversify their supply to. On the other hand Indian ocean trade was also inefficient because it sold lots of bulk products but the product was very cheap leading to cheaper profit margin. Yet on the Silk Road all these problems were solved because it valued trading light valuable items which were great for profit margins this was achievable exclusively to the Silk Road because of China making their recipe for silk private. Not only that but the Silk Road also traded a mass variety of items due to its vast spread across the world attracting numerous markets for many items like spices in southern asia to glassware in Persia.</p></div>
+  </article>
+  </div>
+  <div id="voice-source" hidden>
+  <article class="voice-data" data-i="0" hidden>
+    <blockquote>A description of the Kushan empire city written by a Buddhist pilgrim, in 646 CE. The Kushan empire city was a city full of merchandise from different countries as well as the soil being rich and amazing agricultural conditions. The inhabitants' arts and trade skills are better than in most other countries. This was along the silk road and was there when people came out of the Gobi desert and the Taklimakan desert which was very harsh and brutal so having this city was a great help.</blockquote>
+    <div class="src">Buddhist pilgrim<small>Kushan empire city · 646 CE</small></div>
+  </article>
+  <article class="voice-data" data-i="1" hidden>
+    <blockquote>A trade chart created from a variety of sources shows transactions a merchant might make after spending time on the silk road trade route. The silk road connected this trader to so many cities like Marakana and Palmyra. The trader contained many valuables like iron, paper and silk and he traded them for even more valuable and exclusive items like Indian peppers, horses and wool. The silk road also allowed for the spread of ideas as one of the transactions was a book of Concucain lessons for a book of Buddhist prayers. The source even shows that the journey caused the trader to lose a camel and some silk but the amount he made from the journey was a lot more than what he lost. Overall it shows how the silk road connected major areas of trade like China and India while also bringing a huge variety of goods/valubales.</blockquote>
+    <div class="src">Trade chart<small>Merchant transactions on the Silk Road</small></div>
+  </article>
+  </div>
+
+  <div class="overlay">
+    <!-- Sound (muted by default) -->
+    <div id="toolbar" class="ctl">
+      <button id="btn-sound" aria-pressed="false" aria-label="Sound is off. Turn sound on" title="Sound is off (click to turn on caravan ambience and chimes)"><span class="ic" aria-hidden="true">&#x1F507;</span><span class="tx">Sound off</span></button>
+    </div>
+
+    <!-- Era banner (timeline) -->
+    <div id="era-banner" aria-live="polite"><b></b><span></span></div>
+
+    <!-- Full-height left claims / testimonials panel -->
+    <aside id="sidepanel" class="ctl" role="dialog" aria-label="Claims and testimonials" aria-hidden="true">
+      <div class="sp-head">
+        <div>
+          <div class="sp-kicker" id="sp-kicker">Why invest</div>
+          <h2 id="sp-heading">Claims</h2>
+        </div>
+        <button class="sp-close" id="sp-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="sp-body" id="sp-body"></div>
+      <div class="sp-foot">
+        <div class="sp-nav">
+          <button id="sp-prev" aria-label="Previous">&#x25C0;</button>
+          <span class="sp-page" id="sp-page">1 / 3</span>
+          <button id="sp-next" aria-label="Next">&#x25B6;</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="left-col">
+      <div class="title">
+        <!-- EDIT: hero title and tagline -->
+        <h1>THE <span>SILK</span> ROAD</h1>
+        <div class="tag">Invest in the Route that Connects the World</div>
+        <div class="sub">Drag the globe &middot; click a city to fly there &middot; compare routes</div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="controls">
+        <div class="modes">
+          <button id="btn-claims" aria-pressed="false" title="Open investment claims"><span class="ic" aria-hidden="true">&#x25A3;</span><span>Claims</span></button>
+          <button id="btn-voices" aria-pressed="false" title="Open traveler testimonials"><span class="ic" aria-hidden="true">&#x275D;</span><span>Testimonials</span></button>
+          <button id="btn-goods" aria-pressed="false" title="Show silk, spices and porcelain moving along the Silk Road"><span class="ic" aria-hidden="true">&#x2726;</span><span>Goods<span class="lg"> flow</span></span></button>
+          <button id="btn-daynight" aria-pressed="true" title="Moving sun: day and night with city lights (off = always daylight)"><span class="ic" aria-hidden="true">&#x25D0;</span><span>Day/night</span></button>
+        </div>
+        <div class="fly">
+          <button data-fly="silk" class="active">Silk Road</button>
+          <button data-fly="indian">Indian Ocean</button>
+          <button data-fly="sahara">Trans-Saharan</button>
+          <button data-fly="overview">Earth</button>
+        </div>
+        <div class="legend ctl">
+          <div class="ttl">Routes</div>
+          <label style="color:#f2c14e"><input type="checkbox" data-route="silk" checked><i class="sw" style="background:#f2c14e"></i><span>Silk Road</span></label>
+          <label style="color:#4fb8b0"><input type="checkbox" data-route="indian" checked><i class="sw" style="background:repeating-linear-gradient(90deg,#4fb8b0 0 5px,transparent 5px 8px)"></i><span>Indian Ocean</span></label>
+          <label style="color:#d0714a"><input type="checkbox" data-route="sahara" checked><i class="sw" style="background:repeating-linear-gradient(90deg,#d0714a 0 5px,transparent 5px 8px)"></i><span>Trans-Saharan</span></label>
+          <div class="goods-legend" id="goods-legend"></div>
+        </div>
+        <!-- Timeline (EDIT the stop names in the ERAS data in the script) -->
+        <div class="timeline ctl all" id="timeline">
+          <div class="ttl"><span>Timeline &middot; <b id="era-now">All eras</b></span><button id="era-all" class="on" aria-pressed="true">All eras</button></div>
+          <input type="range" id="era-range" min="0" max="3" step="0.01" value="0" aria-label="Timeline">
+          <div class="ticks" id="era-ticks"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="hint">Drag to rotate &middot; scroll to zoom &middot; click cities</div>
+  </div>
+</header>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* =====================================================================
+   EDITABLE DATA: routes, cities and the text in the info cards
+   ===================================================================== */
+const ROUTES = {
+  silk:   { name:'The Silk Road', kicker:'Our route', color:'#f2c14e', text:'', chips:[] },
+  indian: { name:'Indian Ocean Trade', kicker:'Competitor', color:'#4fb8b0', text:'', chips:[] },
+  sahara: { name:'Trans-Saharan Trade', kicker:'Competitor', color:'#d0714a', text:'', chips:[] }
+};
+
+// Cities: id, name, lat, lon, route, major (1 = labeled AP World hub; 0 = unlabeled path waypoint only)
+const CITIES = [
+  // Silk Road majors (labeled)
+  ['changan','Chang\u2019an',34.27,108.95,'silk',1,''],
+  ['dunhuang','Dunhuang',40.14,94.66,'silk',1,''],
+  ['turpan','Turpan',42.95,89.19,'silk',1,''],
+  ['kashgar','Kashgar',39.47,75.99,'silk',1,''],
+  ['samarkand','Samarkand',39.65,66.96,'silk',1,''],
+  ['baghdad','Baghdad',33.31,44.37,'silk',1,''],
+  ['constantinople','Constantinople',41.01,28.98,'silk',1,''],
+  // Silk Road waypoints (path only — no label)
+  ['bukhara','Bukhara',39.77,64.42,'silk',0,''],
+  ['merv','Merv',37.66,62.19,'silk',0,''],
+  ['antioch','Antioch',36.2,36.16,'silk',0,''],
+  ['palmyra','Palmyra',34.55,38.27,'silk',0,''],
+  ['balkh','Balkh',36.76,66.9,'silk',0,''],
+  // Indian Ocean majors
+  ['guangzhou','Guangzhou',23.13,113.26,'indian',1,''],
+  ['malacca','Malacca',2.19,102.25,'indian',1,''],
+  ['calicut','Calicut',11.26,75.78,'indian',1,''],
+  ['kilwa','Kilwa',-8.96,39.51,'indian',1,''],
+  // Indian Ocean waypoints
+  ['hormuz','Hormuz',27.1,56.45,'indian',0,''],
+  ['aden','Aden',12.79,45.03,'indian',0,''],
+  ['mogadishu','Mogadishu',2.05,45.32,'indian',0,''],
+  // Trans-Saharan majors
+  ['timbuktu','Timbuktu',16.77,-3.0,'sahara',1,''],
+  ['gao','Gao',16.27,-0.04,'sahara',1,''],
+  ['cairo','Cairo',30.04,31.24,'sahara',1,''],
+  ['sijilmasa','Sijilmasa',31.3,-4.3,'sahara',1,''],
+  // Trans-Saharan waypoint
+  ['taghaza','Taghaza',23.6,-5.0,'sahara',0,'']
+].map(([id,name,lat,lon,route,major,text]) => ({id,name,lat,lon,route,major:major===1,town:false,text,label:major===1}));
+const CITY = Object.fromEntries(CITIES.map(c => [c.id, c]));
+
+// Route paths: lists of [lat, lon]. City ids are looked up; extra points are real geography
+// (unlabelled waypoints keep the line on land / at sea where it really ran).
+// e: path weight at each timeline stop [I, II, III, IV] (0 = hidden, 1 = full). Drives the timeline.
+const PATHS = {
+  silk: [
+    // MAIN trunk (the caravan walks this one)
+    {t:'main', p:['changan',[36.06,103.83],[37.93,102.64],[38.93,100.45],[39.73,98.49],[40.35,93.86],'dunhuang',[42.83,93.51],'turpan',[41.76,86.15],[41.72,82.96],[41.17,80.26],'kashgar',
+       [40.0,73.6],[40.53,72.80],[40.6,71.8],[40.53,70.94],[40.28,69.62],'samarkand','bukhara',[39.08,63.57],'merv',[36.21,58.80],[35.59,51.43],[34.80,48.51],'baghdad',
+       [34.6,40.9],[36.20,37.16],'antioch',[37.4,35.0],[38.4,32.0],[40.4,30.3],'constantinople'], e:[1,1,1,0.5]},
+    // BRANCHES
+    {t:'branch', p:['dunhuang',[39.22,88.97],[38.13,85.53],[36.85,81.67],[37.11,79.93],[38.42,77.25],'kashgar'], e:[1,0.8,0.5,0.3]},                          // southern Tarim
+    {t:'branch', p:[[42.83,93.51],[43.6,91.5],[44.05,89.07],[44.2,86.0],[44.4,83.0],[44.05,80.87],[43.3,77.0],[42.9,74.6],[42.52,72.24],[42.5,70.3],[42.85,68.30]], e:[0.3,1,1,0.4]}, // northern steppe
+    {t:'branch', p:[[42.85,68.30],[41.31,69.28],[40.28,69.62]], e:[0.4,1,1,0.6]},
+    {t:'branch', p:[[42.85,68.30],[44.8,65.5],[45.6,61.5],[46.6,55.5],[47.0,51.0],[47.17,47.43],[47.6,44.0],[47.10,39.42]], e:[0.1,0.4,1,0.3]},     // steppe to the Volga
+    {t:'branch', p:[[47.10,39.42],[46.4,37.3],[45.03,35.38],[43.6,32.5],[41.4,29.2],'constantinople'], e:[0,0.3,1,0.3]},                    // Black Sea (by ship)
+    {t:'branch', p:['kashgar',[37.77,75.23],[37.0,72.5],[36.9,69.0],'balkh','samarkand'], e:[1,0.8,0.6,0.5]},                      // Pamirs / Wakhan to Balkh
+    {t:'branch', p:['balkh',[35.6,67.9],[34.82,67.83],[34.5,69.2],[34.1,71.1],[33.75,72.82],[31.55,74.34],[30.2,75.9],[28.61,77.21],[27.2,80.0],[25.61,85.14]], e:[1,0.7,0.6,0.7], k:'india'}, // to India (Grand Trunk Road)
+    {t:'branch', p:['merv',[36.0,62.3],[34.35,62.20],[33.0,63.5],[31.61,65.71]], e:[0.6,0.7,0.7,1], k:'kandahar'},
+    {t:'branch', p:[[35.59,51.43],[36.3,49.6],[38.08,46.29],[39.5,43.5],[40.0,41.3],[41.00,39.72]], e:[0.2,0.5,1,0.7]},                         // Persian silk road to the Black Sea
+    {t:'branch', p:['baghdad',[33.8,41.0],'palmyra',[33.51,36.29],[33.27,35.20]], e:[1,0.6,0.4,0.3]},                                      // Levant caravan road
+    {t:'branch', p:['bukhara',[40.8,61.5],[42.30,59.10]], e:[0.3,0.8,1,0.5]},
+    // SPURS / capillary paths
+    {t:'spur', p:[[42.30,59.10],[43.5,57.0],[45.5,53.5],[47.17,47.43]], e:[0,0.3,1,0.3]},                                                // Ustyurt crossing (Caspian route)
+    {t:'spur', p:[[35.59,51.43],[36.4,52.3],[36.84,54.43],[38.5,54.5],[40.8,57.5],[42.30,59.10]], e:[0.3,0.7,1,0.5]},                            // east Caspian shore
+    {t:'spur', p:[[38.08,46.29],[39.8,47.6],[41.0,48.6],[42.06,48.29],[44.5,47.2],[47.17,47.43]], e:[0,0.3,1,0.4]},                            // west Caspian shore
+    {t:'spur', p:['dunhuang',[40.52,89.90],[41.76,86.15]], e:[1,0.05,0,0]},                                                              // Loulan middle route
+    {t:'spur', p:['turpan',[43.6,88.9],[44.05,89.07]], e:[0.3,1,1,0.3]},
+    {t:'spur', p:[[41.72,82.96],[42.6,81.8],[44.05,80.87]], e:[0.3,0.8,1,0.3]},
+    {t:'spur', p:[[38.42,77.25],[37.77,75.23]], e:[1,0.8,0.5,0.4]},
+    {t:'spur', p:['kashgar',[40.8,74.5],[41.6,73.3],[42.52,72.24]], e:[0.4,1,1,0.4]},                                                // Torugart to the steppe
+    {t:'spur', p:['samarkand',[39.49,67.61]], e:[0.3,1,0.3,0.3]},
+    {t:'spur', p:['samarkand',[41.31,69.28]], e:[0.6,1,1,0.8]},
+    {t:'spur', p:['balkh',[37.4,65.6],[39.08,63.57]], e:[0.7,0.8,0.5,0.4]},
+    {t:'spur', p:['balkh',[35.0,65.0],[34.35,62.20]], e:[0.6,0.7,0.6,0.9]},
+    {t:'spur', p:[[31.61,65.71],[32.6,69.0],[33.4,71.4],[33.75,72.82]], e:[0.8,0.5,0.5,0.6]},
+    {t:'spur', p:[[36.21,58.80],[35.3,60.5],[34.35,62.20]], e:[0.5,0.8,0.6,0.9]},
+    {t:'spur', p:[[34.80,48.51],[36.5,47.0],[38.08,46.29]], e:[0.3,0.6,1,0.7]},
+    {t:'spur', p:[[36.20,37.16],'palmyra'], e:[1,0.3,0.2,0.2]},
+    {t:'spur', p:[[33.51,36.29],[34.4,36.5],'antioch'], e:[1,0.7,0.4,0.3]},
+    {t:'spur', p:[[36.06,103.83],[35.5,106.3],'changan'], e:[1,1,0.6,0.6]},
+    {t:'spur', p:[[37.11,79.93],[38.6,80.5],[41.17,80.26]], e:[0.8,0.7,0.4,0.3]},                                                              // across the Taklamakan along the Khotan river
+    {t:'spur', p:[[41.00,39.72],[39.7,37.0],[38.7,35.5],[38.4,32.0]], e:[0.2,0.6,1,0.6]}
+  ],
+  indian: [
+    ['guangzhou',[21.9,113.7],[18.3,112.6],[12.0,110.4],[7.0,106.0],[3.0,105.0],[1.2,104.3],[1.25,103.6],[1.8,102.7],'malacca',
+     [3.5,100.4],[5.6,98.7],[6.4,95.2],[6.0,89.0],[5.25,82.5],[5.3,80.5],[6.6,78.2],[7.6,77.0],[9.5,75.9],'calicut',
+     [12.5,64.0],[13.0,55.0],[12.4,49.0],'aden',[12.2,48.0],[12.3,51.9],[10.0,52.3],[6.0,50.3],[3.0,47.2],'mogadishu',
+     [-1.5,43.0],[-4.8,40.2],[-6.2,39.4],[-6.16,39.19],[-7.6,39.75],'kilwa'],
+    ['calicut',[15.5,69.0],[21.0,62.5],[24.5,58.6],[26.3,56.9],'hormuz'],
+    {t:'spur', p:['hormuz',[26.5,55.5],[26.4,53.0],[27.6,51.0],[29.2,49.4],[29.9,48.6],[30.51,47.81]]},
+    {t:'spur', p:['aden',[12.6,43.4],[15.0,42.0],[18.0,40.5],[21.49,39.19]]},
+    {t:'spur', p:['calicut',[13.0,74.0],[16.0,73.0],[19.0,72.4],[21.4,72.4],[22.30,72.62]]},
+    {t:'spur', p:['malacca',[1.8,102.7],[1.25,103.6],[0.4,104.7],[-1.8,105.5],[-2.99,104.76]]},
+    {t:'spur', p:['guangzhou',[22.0,114.2],[22.6,116.0],[23.8,117.8],[24.87,118.68]]}
+  ],
+  sahara: [
+    ['timbuktu','taghaza','sijilmasa'],
+    ['timbuktu','gao',[16.97,7.99],[21.5,13.5],[25.5,22.0],[28.2,28.0],'cairo']
+  ]
+};
+
+/* =====================================================================
+   THREE.JS SCENE
+   ===================================================================== */
+const R = 1;                       // globe radius
+const TEX = 'https://unpkg.com/three-globe@2.31.0/example/img/';
+const CLOUDS = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/planets/earth_clouds_2048.png';
+const FALLBACK = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/planets/';
+
+let renderer, labelRenderer, scene, camera, controls, clock, earth, clouds, keyLight, raycaster;
+let spaceGroup;                   // stars + planets + moon (co-rotates with the auto-spin, see animate)
+let hemiLight, earthMat;            // soft fill light + Earth material (day/night tweaks them)
+const atmoMats = [];               // atmosphere shaders (sun-aware glow)
+const pointer = new THREE.Vector2(-9, -9);
+const routeObjs = {};             // id -> {group, mats, hit, lines}
+const cityObjs = [];              // {data, pin, label, el, hit}
+let caravan, dhow, flight = null, autoRotate = true, hovered = null, overviewDist = 3.2;
+const state = { dhowS: 0.1, dhowDir: 1, texturesLoaded: 0, sunLon: 0, sunLat: 0 };
+
+function ll2v(lat, lon, r = R) {
+  const phi = (90 - lat) * Math.PI / 180, th = (lon + 180) * Math.PI / 180;
+  return new THREE.Vector3(-r * Math.sin(phi) * Math.cos(th), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(th));
+}
+function v2ll(v) {
+  const n = v.clone().normalize();
+  const lat = 90 - Math.acos(n.y) * 180 / Math.PI;
+  let lon = Math.atan2(n.z, -n.x) * 180 / Math.PI - 180;
+  if (lon < -180) lon += 360;
+  return { lat, lon };
+}
+
+function initThree() {
+  const host = document.getElementById('globe');
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(host.clientWidth, host.clientHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+  host.appendChild(renderer.domElement);
+
+  labelRenderer = new CSS2DRenderer({ element: document.getElementById('labels') });
+  labelRenderer.setSize(host.clientWidth, host.clientHeight);
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(40, host.clientWidth / host.clientHeight, 0.01, 200);
+  clock = new THREE.Clock();
+  raycaster = new THREE.Raycaster();
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.enablePan = false;
+  controls.rotateSpeed = 0.45;
+  controls.zoomSpeed = 0.7;
+  controls.minDistance = 1.22;     // never clip into the globe
+  controls.addEventListener('start', () => { autoRotate = false; flight = null; settle = null; setCine(false); });
+
+  // Lights: warm key light that follows the camera (offset up-left), soft cool ambient.
+  // NOTE: keep this the FIRST directional light added; the Earth night-lights shader reads directionalLights[0].
+  keyLight = new THREE.DirectionalLight(0xfff1dc, 2.9);
+  scene.add(keyLight);
+  hemiLight = new THREE.HemisphereLight(0x9fb6d8, 0x1a1408, 0.32);
+  scene.add(hemiLight);
+
+  resize();
+  camera.position.copy(ll2v(30, camera.aspect < 1 ? 66 : 60, overviewDist));
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld();
+  window.addEventListener('resize', resize);
+}
+
+function resize() {
+  const host = document.getElementById('globe');
+  const w = host.clientWidth, h = host.clientHeight;
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+  camera.aspect = w / h;
+  applyViewOffset();
+  // Distance at which the whole globe fits nicely
+  const vHalf = THREE.MathUtils.degToRad(camera.fov / 2);
+  const hHalf = Math.atan(Math.tan(vHalf) * camera.aspect);
+  overviewDist = camera.aspect < 1 ? 1.1 / Math.sin(hHalf) : 1.08 / Math.sin(vHalf);
+  controls.maxDistance = overviewDist * 1.25;
+}
+
+function loadTex(url, srgb, fallback) {
+  return new Promise(res => {
+    const l = new THREE.TextureLoader(); l.setCrossOrigin('anonymous');
+    const ok = t => { if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); state.texturesLoaded++; res(t); };
+    l.load(url, ok, undefined, () => fallback ? l.load(fallback, ok, undefined, () => res(null)) : res(null));
+  });
+}
+
+async function createGlobe() {
+  const [day, bump, water, night, sky, cloud] = await Promise.all([
+    loadTex(TEX + 'earth-blue-marble.jpg', true, FALLBACK + 'earth_atmos_2048.jpg'),
+    loadTex(TEX + 'earth-topology.png', false),
+    loadTex(TEX + 'earth-water.png', false, FALLBACK + 'earth_specular_2048.jpg'),
+    loadTex(TEX + 'earth-night.jpg', true, FALLBACK + 'earth_lights_2048.png'),
+    loadTex(TEX + 'night-sky.png', true),
+    loadTex(CLOUDS, true)
+  ]);
+
+  // Starfield background
+  if (sky) {
+    const stars = new THREE.Mesh(new THREE.SphereGeometry(90, 48, 24),
+      new THREE.MeshBasicMaterial({ map: sky, side: THREE.BackSide, color: 0x8a8a9a, depthWrite: false, toneMapped: false }));
+    stars.renderOrder = -10;
+    spaceGroup.add(stars);
+  }
+
+  // Earth: Phong with bump relief, ocean specular shine and city lights on the night side
+  const mat = new THREE.MeshPhongMaterial({
+    map: day, bumpMap: bump, bumpScale: 4.0,
+    specularMap: water, specular: new THREE.Color(0x4a5a6a), shininess: 22,
+    emissiveMap: night, emissive: new THREE.Color(0xffc887), emissiveIntensity: 1.1
+  });
+  earthMat = mat;
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uTwilight = EARTH_UNIFORMS.uTwilight;
+    sh.uniforms.uNightDim = EARTH_UNIFORMS.uNightDim;
+    sh.fragmentShader = 'uniform float uTwilight;\nuniform float uNightDim;\n' + sh.fragmentShader;
+    // darker night side (only the soft fill light is dimmed, city lights stay bright)
+    sh.fragmentShader = sh.fragmentShader.replace('#include <aomap_fragment>', `#include <aomap_fragment>
+      #if NUM_DIR_LIGHTS > 0
+        reflectedLight.indirectDiffuse *= mix( uNightDim, 1.0, smoothstep( -0.3, 0.12, dot( normal, directionalLights[0].direction ) ) );
+      #endif`);
+    // warm sunset band along the terminator
+    sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `
+      #if NUM_DIR_LIGHTS > 0
+        float sdT = dot( normal, directionalLights[0].direction );
+        float twl = smoothstep( -0.14, 0.0, sdT ) * ( 1.0 - smoothstep( 0.0, 0.16, sdT ) );
+        outgoingLight += vec3( 1.0, 0.45, 0.18 ) * twl * uTwilight * ( 0.15 + 0.6 * diffuseColor.rgb );
+      #endif
+      #include <opaque_fragment>`);
+    // only show night lights where the sun does not shine
+    sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `
+      #ifdef USE_EMISSIVEMAP
+        vec4 emissiveColor = texture2D( emissiveMap, vEmissiveMapUv );
+        float sunDot = dot( normal, directionalLights[0].direction );
+        // keep only the city lights: they are bright in red, the photo's bluish land tint is not
+        float cityR = emissiveColor.r;
+        vec3 cityLights = vec3( smoothstep( 0.012, 0.3, cityR ) * ( 0.3 + cityR ) );
+        totalEmissiveRadiance *= cityLights * smoothstep( 0.05, -0.25, sunDot );
+      #endif`);
+  };
+  earth = new THREE.Mesh(new THREE.SphereGeometry(R, 160, 96), mat);
+  earth.name = 'earth';
+  scene.add(earth);
+
+  // Thin cloud layer
+  if (cloud) {
+    clouds = new THREE.Mesh(new THREE.SphereGeometry(R * 1.006, 128, 64),
+      new THREE.MeshPhongMaterial({ map: cloud, transparent: true, opacity: 0.42, depthWrite: false, shininess: 0 }));
+    scene.add(clouds);
+  }
+
+  // Atmosphere: outer fresnel halo (back faces) + inner rim on the globe face
+  const atmoVS = `varying vec3 vN; varying vec3 vP;
+    void main(){ vN = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position,1.0); vP = mv.xyz; gl_Position = projectionMatrix * mv; }`;
+  const sunGlow = `uniform vec3 uSun; uniform float uDN;
+    vec3 sunTint(vec3 col, vec3 n){ float sd = dot(n, uSun); float day = smoothstep(-0.45, 0.35, sd);
+      float tw = smoothstep(-0.35, -0.05, sd) * (1.0 - smoothstep(-0.05, 0.3, sd));
+      vec3 lit = col * mix(0.22, 1.15, day) + vec3(1.0,0.45,0.18) * tw * 0.55;
+      return mix(col, lit, uDN); }`;
+  const atmoUniforms = () => ({ uSun: { value: new THREE.Vector3(0, 0, 1) }, uDN: { value: 1 } });
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(R * 1.17, 96, 48), new THREE.ShaderMaterial({
+    uniforms: atmoUniforms(),
+    vertexShader: atmoVS,
+    fragmentShader: `varying vec3 vN; varying vec3 vP; ${sunGlow}
+      void main(){ float d = dot(normalize(-vP), vN); float a = pow(clamp(-d * 1.0, 0.0, 1.0), 3.2);
+        gl_FragColor = vec4(sunTint(vec3(0.32,0.62,1.0), vN) * a * 1.6, a); }`,
+    side: THREE.BackSide, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false
+  }));
+  scene.add(halo);
+  const rim = new THREE.Mesh(new THREE.SphereGeometry(R * 1.009, 128, 64), new THREE.ShaderMaterial({
+    uniforms: atmoUniforms(),
+    vertexShader: atmoVS,
+    fragmentShader: `varying vec3 vN; varying vec3 vP; ${sunGlow}
+      void main(){ float d = dot(normalize(-vP), vN); float f = pow(1.0 - clamp(d,0.0,1.0), 3.5);
+        gl_FragColor = vec4(sunTint(vec3(0.38,0.66,1.0), vN) * f * 1.25, f); }`,
+    blending: THREE.AdditiveBlending, transparent: true, depthWrite: false
+  }));
+  scene.add(rim);
+  atmoMats.push(halo.material, rim.material);
+}
+
+/* =====================================================================
+   SPACE BACKDROP: extra stars, the other planets and the Moon.
+   Simple procedural canvas textures (tiny, no downloads) so Earth stays the star.
+   ===================================================================== */
+const SHOW_PLANET_LABELS = false;          // tiny muted names under the planets (desktop only)
+const MOON_TEX = FALLBACK + 'moon_1024.jpg';
+// Each planet starts at a chosen spot on screen (desk / mob: -1..1, +x right, +y up) so the hero is
+// nicely composed, `dist` units from the camera (Earth radius = 1). Off-screen values (|x| > 1) put a
+// planet out of the first view so it turns up when you drag the globe around.
+// orbit = slow drift around Earth's axis (deg/s), spin = self rotation (rad/s).
+const PLANETS = [
+  { id:'mercury', name:'Mercury', r:0.13, dist:26, desk:[-0.13,-0.86], mob:[ 0.20, 0.57], orbit:0.30, spin:0.05,
+    tex:{ type:'rocky', base:'#8f8a84', dark:'#5f5a55', light:'#bdb7ae', craters:320, blobs:40 } },
+  { id:'venus',   name:'Venus',   r:0.27, dist:30, desk:[ 0.88,-0.56], mob:[-0.82,-0.33], orbit:0.22, spin:0.02,
+    tex:{ type:'soft', bands:['#ead4a2','#dcbb80','#f2e2bb','#cfa86c'], freq:6, blur:4, streaks:160 } },
+  { id:'mars',    name:'Mars',    r:0.24, dist:34, desk:[-0.15, 0.72], mob:[ 0.86,-0.38], orbit:0.18, spin:0.12,
+    tex:{ type:'rocky', base:'#b4562e', dark:'#6e3220', light:'#d68a5c', craters:70, blobs:70, caps:true } },
+  { id:'jupiter', name:'Jupiter', r:1.15, dist:46, desk:[-0.61,-0.12], mob:[-0.70, 0.40], orbit:0.06, spin:0.18,
+    tex:{ type:'banded', bands:['#f1e6d2','#d8b58a','#b07a50','#ead7b6','#9c6a46','#f5ede1','#c99a6c'], freq:17, streaks:520,
+          spot:{ v:0.64, u:0.30, w:46, h:20, color:'#c0603c' } } },
+  { id:'saturn',  name:'Saturn',  r:0.86, dist:54, desk:[ 0.80, 0.62], mob:[ 0.62, 0.49], orbit:0.045, spin:0.16, rings:true,
+    tex:{ type:'banded', bands:['#eedfba','#dcc391','#c8a974','#f1e6c8','#d4b884'], freq:12, streaks:260 } },
+  { id:'uranus',  name:'Uranus',  r:0.66, dist:62, desk:[-2.40, 0.35], mob:[-3.2, 0.30], orbit:0.035, spin:0.10,
+    tex:{ type:'soft', bands:['#a9dee4','#9bd3db','#b9e6ea','#92ccd6'], freq:5, blur:4, streaks:60 } },
+  { id:'neptune', name:'Neptune', r:0.64, dist:70, desk:[ 2.60,-0.25], mob:[ 3.4,-0.20], orbit:0.03, spin:0.11,
+    tex:{ type:'soft', bands:['#4a77d6','#3c63c2','#5d8be0','#2f55ad'], freq:8, blur:2, streaks:120,
+          spot:{ v:0.62, u:0.55, w:26, h:12, color:'#22357a' } } }
+];
+const MOON = { r:0.2, orbitR:10, speed:1.2, desk:[0.62,-0.80], mob:[-0.42,0.55],
+  tex:{ type:'rocky', base:'#9d9a95', dark:'#6b6864', light:'#c4c1bb', craters:260, blobs:60 } };
+
+const planetObjs = [];                     // {spec, group, mesh, home, label, el}
+let moonObj = null;
+
+function rng(seed) {                        // small seeded random (mulberry32) so textures are stable
+  return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function blurCanvas(src, px) {
+  const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+  const x = c.getContext('2d'); x.filter = `blur(${px}px)`;
+  x.drawImage(src, -src.width, 0); x.drawImage(src, src.width, 0); x.drawImage(src, 0, 0);   // wrap edges
+  return c;
+}
+function paintBands(x, W, H, spec, rnd) {
+  const cols = spec.bands.map(c => new THREE.Color(c)), tmp = new THREE.Color(), ph = rnd() * 10;
+  for (let y = 0; y < H; y++) {
+    const t = y / H;
+    let n = 0.5 + 0.5 * Math.sin(t * spec.freq * Math.PI + Math.sin(t * 11 + ph) * 0.9) * (0.75 + 0.25 * Math.sin(t * 37 + ph));
+    n = THREE.MathUtils.clamp(n + (rnd() - 0.5) * 0.04, 0, 0.999) * (cols.length - 1);
+    const i = Math.floor(n);
+    tmp.copy(cols[i]).lerp(cols[Math.min(i + 1, cols.length - 1)], n - i);
+    x.fillStyle = '#' + tmp.getHexString(); x.fillRect(0, y, W, 1);
+  }
+  for (let i = 0; i < (spec.streaks || 0); i++) {        // wispy cloud streaks
+    const y = rnd() * H, cx = rnd() * W, w = 10 + rnd() * 90, h = 0.6 + rnd() * 2.4;
+    x.globalAlpha = 0.08 + rnd() * 0.18; x.fillStyle = spec.bands[Math.floor(rnd() * spec.bands.length)];
+    for (const off of [-W, 0, W]) { x.beginPath(); x.ellipse(cx + off, y, w, h, 0, 0, Math.PI * 2); x.fill(); }
+  }
+  x.globalAlpha = 1;
+  if (spec.spot) {                                       // e.g. Jupiter's Great Red Spot
+    const s = spec.spot, g = x.createRadialGradient(s.u * W, s.v * H, 0, s.u * W, s.v * H, s.w);
+    g.addColorStop(0, s.color); g.addColorStop(0.55, s.color + 'cc'); g.addColorStop(1, s.color + '00');
+    x.fillStyle = g; x.save(); x.translate(s.u * W, s.v * H); x.scale(1, s.h / s.w); x.translate(-s.u * W, -s.v * H);
+    x.beginPath(); x.arc(s.u * W, s.v * H, s.w, 0, Math.PI * 2); x.fill(); x.restore();
+  }
+}
+function paintRocky(x, W, H, spec, rnd) {
+  x.fillStyle = spec.base; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < (spec.blobs || 0); i++) {          // large soft light/dark regions
+    const cx = rnd() * W, cy = H * 0.12 + rnd() * H * 0.76, r = 10 + rnd() * 60, col = rnd() < 0.6 ? spec.dark : spec.light;
+    for (const off of [-W, 0, W]) {
+      const g = x.createRadialGradient(cx + off, cy, 0, cx + off, cy, r);
+      g.addColorStop(0, col + '66'); g.addColorStop(1, col + '00');
+      x.fillStyle = g; x.fillRect(cx + off - r, cy - r, r * 2, r * 2);
+    }
+  }
+  for (let i = 0; i < (spec.craters || 0); i++) {        // small craters: dark bowl + light rim
+    const cx = rnd() * W, cy = rnd() * H, r = 0.8 + Math.pow(rnd(), 3) * 7;
+    x.globalAlpha = 0.35; x.fillStyle = spec.dark; x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill();
+    x.globalAlpha = 0.25; x.strokeStyle = spec.light; x.lineWidth = 0.8; x.beginPath(); x.arc(cx - r * 0.15, cy - r * 0.15, r, Math.PI * 0.9, Math.PI * 1.9); x.stroke();
+  }
+  x.globalAlpha = 1;
+  if (spec.caps) for (const [y0, y1] of [[0, H * 0.09], [H, H * 0.92]]) {   // polar ice caps
+    const g = x.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, '#f4efe9'); g.addColorStop(1, '#f4efe900');
+    x.fillStyle = g; x.fillRect(0, Math.min(y0, y1), W, Math.abs(y1 - y0));
+  }
+}
+function makePlanetTexture(spec, seed) {
+  const W = 512, H = 256; let c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d'), rnd = rng(seed);
+  if (spec.type === 'rocky') paintRocky(x, W, H, spec, rnd); else paintBands(x, W, H, spec, rnd);
+  if (spec.blur) c = blurCanvas(c, spec.blur);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+function makeRingTexture() {
+  const W = 512, c = document.createElement('canvas'); c.width = W; c.height = 4;
+  const x = c.getContext('2d'), rnd = rng(7);
+  for (let i = 0; i < W; i++) {
+    const f = i / W;
+    let a = 0.55 + 0.25 * Math.sin(f * 60) * Math.sin(f * 13) + (rnd() - 0.5) * 0.2;
+    if (f < 0.2) a *= 0.35;                              // faint inner C ring
+    if (f > 0.6 && f < 0.665) a = 0.05;                  // Cassini division
+    if (f > 0.93) a *= (1 - f) / 0.07;                   // soft outer edge
+    const l = 200 + Math.round(30 * Math.sin(f * 20));
+    x.fillStyle = `rgba(${l},${l - 18},${l - 50},${THREE.MathUtils.clamp(a, 0, 1)})`; x.fillRect(i, 0, 1, 4);
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function makeSaturnRings(r) {
+  const inner = r * 1.25, outer = r * 2.3;
+  const geo = new THREE.RingGeometry(inner, outer, 128, 1);
+  const pos = geo.attributes.position, uv = geo.attributes.uv, v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i); uv.setXY(i, (v.length() - inner) / (outer - inner), 0.5); }
+  const ring = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: makeRingTexture(), transparent: true, side: THREE.DoubleSide, depthWrite: false, color: 0xc9bda2 }));
+  ring.rotation.x = -Math.PI / 2;                        // lie flat in the planet's equator plane
+  return ring;
+}
+
+// Point in the scene that appears at screen position ndc=[x,y], `dist` from the camera
+// (or exactly `radius` from Earth's centre when radius is given).
+function pointOnScreen(ndc, dist, radius) {
+  const dir = new THREE.Vector3(ndc[0], ndc[1], 0.5).unproject(camera).sub(camera.position).normalize();
+  if (radius) { const b = camera.position.dot(dir); dist = -b + Math.sqrt(Math.max(0, b * b - camera.position.lengthSq() + radius * radius)); }
+  return camera.position.clone().addScaledVector(dir, dist);
+}
+
+function createStars() {                                  // a sprinkle of crisp stars in front of the sky texture
+  const N = 1800, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), rnd = rng(42), c = new THREE.Color();
+  for (let i = 0; i < N; i++) {
+    const u = rnd() * 2 - 1, th = rnd() * Math.PI * 2, s = Math.sqrt(1 - u * u), d = 84 + rnd() * 4;
+    pos.set([s * Math.cos(th) * d, u * d, s * Math.sin(th) * d], i * 3);
+    c.setHSL(rnd() < 0.5 ? 0.6 : 0.1, 0.25 + rnd() * 0.3, 0.6 + rnd() * 0.4).multiplyScalar(0.5 + rnd() * 0.6);
+    col.set([c.r, c.g, c.b], i * 3);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, vertexColors: true, map: radialTexture(),
+    transparent: true, depthWrite: false, toneMapped: false }));
+  pts.renderOrder = -9;
+  spaceGroup.add(pts);
+}
+
+function createPlanets() {
+  const mobile = window.innerWidth < 760, k = mobile ? 0.8 : 1;
+  PLANETS.forEach((p, i) => {
+    const group = new THREE.Group(); group.name = 'planet-' + p.id;
+    const r = p.r * k;
+    const mat = new THREE.MeshStandardMaterial({ map: makePlanetTexture(p.tex, i * 97 + 3), roughness: 1, metalness: 0 });
+    mat.color.setScalar(0.9);                            // a touch dimmer than Earth
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 32), mat);
+    group.add(mesh);
+    group.position.copy(pointOnScreen(mobile ? p.mob : p.desk, p.dist));
+    if (p.rings) {                                       // tilt the rings ~24 deg towards the viewer so they read well
+      const view = group.position.clone().sub(camera.position).normalize();
+      const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+      const normal = up.multiplyScalar(Math.cos(0.42)).addScaledVector(view, -Math.sin(0.42)).normalize()
+        .applyAxisAngle(view, -0.32);
+      group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+      group.add(makeSaturnRings(r));
+    }
+    spaceGroup.add(group);
+    let label = null, el = null;
+    if (SHOW_PLANET_LABELS) {
+      el = document.createElement('div'); el.className = 'plbl hide'; el.innerHTML = `<span>${p.name}</span>`;
+      label = new CSS2DObject(el); spaceGroup.add(label);
+    }
+    planetObjs.push({ spec: p, group, mesh, r, home: group.position.clone(), label, el });
+  });
+}
+
+function createMoon() {
+  const mobile = window.innerWidth < 760;
+  const mat = new THREE.MeshStandardMaterial({ map: makePlanetTexture(MOON.tex, 11), roughness: 1, metalness: 0 });
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(MOON.r * (mobile ? 0.75 : 1), 48, 32), mat);
+  const home = pointOnScreen(mobile ? MOON.mob : MOON.desk, 0, MOON.orbitR);
+  // orbit plane passes through the start point and is as close to Earth's equator as possible
+  const axis = new THREE.Vector3(0, 1, 0).sub(home.clone().multiplyScalar(home.y / home.lengthSq())).normalize();
+  mesh.position.copy(home);
+  spaceGroup.add(mesh);
+  moonObj = { mesh, home, axis, angle: 0 };
+  // real lunar photo if the CDN answers; the procedural texture stays as the fallback
+  const l = new THREE.TextureLoader(); l.setCrossOrigin('anonymous');
+  l.load(MOON_TEX, t => { t.colorSpace = THREE.SRGBColorSpace; mat.map = t; mat.needsUpdate = true; });
+}
+
+/* =====================================================================
+   THE SUN: a white-hot photosphere (animated granulation + limb darkening),
+   a shader corona with slowly turning streamers, a soft bloom halo and a faint
+   anamorphic streak. All additive and toneMapped:false so it really glows.
+   desk / mob = where it sits on screen at load (-1..1, like the planets);
+   with Day/night on it travels along the real sun direction instead.
+   ===================================================================== */
+const SUN = { dist: 82, r: 1.9, desk: [0.93, 0.18], mob: [-0.93, 0.08], rimColor: 0xffb070, rimIntensity: 0.45 };
+let sunObj = null;                         // {group, core, corona, halo, streak, light}
+
+const GLSL_NOISE = `
+  float h31(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+  float vnoise(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(mix(h31(i), h31(i + vec3(1,0,0)), f.x), mix(h31(i + vec3(0,1,0)), h31(i + vec3(1,1,0)), f.x), f.y),
+               mix(mix(h31(i + vec3(0,0,1)), h31(i + vec3(1,0,1)), f.x), mix(h31(i + vec3(0,1,1)), h31(i + vec3(1,1,1)), f.x), f.y), f.z); }
+  float fbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < 5; i++) { s += a * vnoise(p); p = p * 2.03 + 11.7; a *= 0.5; } return s; }`;
+
+function makeGlowTexture(stops, size = 256) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const x = c.getContext('2d'), h = size / 2, g = x.createRadialGradient(h, h, 0, h, h, h);
+  stops.forEach(([o, col]) => g.addColorStop(o, col));
+  x.fillStyle = g; x.fillRect(0, 0, size, size);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function makeSunSprite(map, scale, opacity, color = 0xffffff) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map, color, transparent: true, opacity,
+    blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+  s.scale.setScalar(scale); s.userData.base = scale; return s;
+}
+// Photosphere: boiling granulation, darker orange limb, white-hot centre
+function makeSunCoreMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `varying vec3 vN; varying vec3 vP; varying vec3 vObj;
+      void main(){ vObj = position; vN = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position,1.0); vP = mv.xyz; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform float uTime; varying vec3 vN; varying vec3 vP; varying vec3 vObj; ${GLSL_NOISE}
+      void main(){
+        vec3 p = normalize(vObj);
+        float g = fbm(p * 7.0 + vec3(0.0, uTime * 0.05, uTime * 0.03));
+        float cells = fbm(p * 22.0 - uTime * 0.08);
+        float mu = clamp(dot(normalize(-vP), vN), 0.0, 1.0);
+        float limb = pow(mu, 0.55);                                   // limb darkening
+        vec3 hot = vec3(1.0, 0.98, 0.93) * 2.3, warm = vec3(1.0, 0.82, 0.5) * 1.6, edge = vec3(1.0, 0.62, 0.26) * 1.25;
+        vec3 col = mix(edge, mix(warm, hot, smoothstep(0.3, 0.9, limb)), smoothstep(0.0, 0.6, limb));
+        col *= 0.88 + 0.2 * g + 0.08 * cells;
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+    toneMapped: false
+  });
+}
+// Corona: camera-facing quad; radial glow broken into slowly turning streamers
+function makeSunCoronaMaterial(coreFrac) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 }, uCore: { value: coreFrac } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `uniform float uTime, uCore; varying vec2 vUv; ${GLSL_NOISE}
+      void main(){
+        vec2 q = vUv * 2.0 - 1.0; float d = length(q); float a = atan(q.y, q.x);
+        float r = max(d - uCore, 0.0) / (1.0 - uCore);                // 0 at the limb, 1 at the quad edge
+        float streak = fbm(vec3(cos(a) * 2.2, sin(a) * 2.2, uTime * 0.04)) ;
+        float fine = fbm(vec3(cos(a) * 9.0, sin(a) * 9.0, r * 2.0 - uTime * 0.06));
+        float glow = exp(-r * 6.0) * 0.85 + exp(-r * 2.0) * 0.22;
+        glow *= 0.6 + 0.8 * streak * (0.75 + 0.45 * fine);             // uneven streamers
+        glow *= smoothstep(1.0, 0.7, d);
+        vec3 col = mix(vec3(1.0, 0.86, 0.58), vec3(1.0, 0.5, 0.2), smoothstep(0.0, 0.45, r));
+        gl_FragColor = vec4(col * glow, glow);
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false
+  });
+}
+function createSun() {
+  const mobile = window.innerWidth < 760, r = SUN.r * (mobile ? 0.8 : 1);
+  const group = new THREE.Group(); group.name = 'sun';
+  group.position.copy(pointOnScreen(mobile ? SUN.mob : SUN.desk, SUN.dist));
+  const core = new THREE.Mesh(new THREE.SphereGeometry(r, 64, 48), makeSunCoreMaterial());
+  const coronaSize = r * 7;
+  const corona = new THREE.Mesh(new THREE.PlaneGeometry(coronaSize * 2, coronaSize * 2), makeSunCoronaMaterial(r / coronaSize));
+  corona.renderOrder = 1;
+  const halo = makeSunSprite(makeGlowTexture([[0, 'rgba(255,236,200,.5)'], [0.12, 'rgba(255,200,130,.22)'], [0.35, 'rgba(255,150,70,.07)'],
+    [1, 'rgba(255,120,40,0)']]), r * 30, 1.0);
+  const streak = makeSunSprite(makeGlowTexture([[0, 'rgba(255,240,215,.55)'], [0.3, 'rgba(255,200,140,.12)'], [1, 'rgba(255,170,90,0)']]), 1, 0.22);
+  streak.scale.set(r * 34, r * 0.9, 1);
+  group.add(halo, streak, corona, core);
+  spaceGroup.add(group);
+  // cheap warm rim light on Earth coming from the visible sun (added after keyLight, see initThree)
+  const light = new THREE.DirectionalLight(SUN.rimColor, SUN.rimIntensity);
+  scene.add(light);
+  sunObj = { group, core, corona, halo, streak, light, home: group.position.clone() };
+}
+const _sunQ = new THREE.Quaternion();
+function updateSun(dt, t) {
+  if (!sunObj) return;
+  sunObj.group.getWorldPosition(sunObj.light.position);    // light shines from the sun towards Earth's centre
+  sunObj.core.material.uniforms.uTime.value = t;
+  sunObj.corona.material.uniforms.uTime.value = t;
+  spaceGroup.getWorldQuaternion(_sunQ).invert().multiply(camera.quaternion);   // corona quad always faces the camera
+  sunObj.corona.quaternion.copy(_sunQ);
+  sunObj.halo.material.opacity = 0.8 + 0.06 * Math.sin(t * 0.9);
+}
+
+function createSpace() {
+  spaceGroup = new THREE.Group(); spaceGroup.name = 'space';
+  scene.add(spaceGroup);
+  createStars();
+  createPlanets();
+  createMoon();
+  createSun();
+}
+
+const _Y = new THREE.Vector3(0, 1, 0), _w = new THREE.Vector3(), _d = new THREE.Vector3();
+function updateSpace(dt, t) {
+  for (const p of planetObjs) {
+    p.group.position.copy(p.home).applyAxisAngle(_Y, THREE.MathUtils.degToRad(p.spec.orbit * t));
+    p.mesh.rotation.y += dt * p.spec.spin;
+  }
+  if (moonObj) {
+    if (window.silk.ready) moonObj.angle += THREE.MathUtils.degToRad(MOON.speed * dt);   // starts where placed once the globe is shown
+    moonObj.mesh.position.copy(moonObj.home).applyAxisAngle(moonObj.axis, moonObj.angle);
+    moonObj.mesh.rotation.y += dt * 0.05;
+  }
+  updateSun(dt, t);
+  updatePlanetLabels();
+}
+
+// Is the line of sight from the camera to world point p blocked by the Earth?
+function hiddenByEarth(p) {
+  _d.copy(p).sub(camera.position); const len = _d.length(); _d.divideScalar(len);
+  const b = camera.position.dot(_d), c = camera.position.lengthSq() - 1.06 * 1.06, disc = b * b - c;
+  if (disc <= 0) return false;
+  const tHit = -b - Math.sqrt(disc);
+  return tHit > 0 && tHit < len;
+}
+
+function updatePlanetLabels() {
+  if (!SHOW_PLANET_LABELS) return;
+  const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
+  const small = w < 760, ui = small ? null : uiRects();
+  const pxPerUnit = (h / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  for (const p of planetObjs) {
+    p.label.position.copy(p.group.position);
+    p.group.getWorldPosition(_w);
+    let show = !small;
+    if (show) {
+      const dist = _w.distanceTo(camera.position);
+      const off = p.r * (p.spec.rings ? 1.25 : 1) / dist * pxPerUnit + 8;
+      p.el.firstChild.style.top = off.toFixed(1) + 'px';
+      _v.copy(_w).project(camera);
+      const x = (_v.x + 1) / 2 * w, y = (1 - _v.y) / 2 * h + off, tw = p.spec.name.length * 9 + 10;
+      const box = [x - tw / 2, y, x + tw / 2, y + 12];
+      show = _v.z < 1 && box[0] > 4 && box[2] < w - 4 && box[1] > 4 && box[3] < h - 4 && !hiddenByEarth(_w)
+        && !ui.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1]);
+    }
+    p.el.classList.toggle('hide', !show);
+  }
+}
+
+/* ---------- ROUTES ---------- */
+function resolve(p) { return typeof p === 'string' ? [CITY[p].lat, CITY[p].lon] : p; }
+// Dense great-circle polyline through waypoints, as unit vectors
+function densePath(list) {
+  const out = [];
+  for (let i = 0; i < list.length - 1; i++) {
+    const a = ll2v(...resolve(list[i])).normalize(), b = ll2v(...resolve(list[i + 1])).normalize();
+    const ang = a.angleTo(b), n = Math.max(2, Math.ceil(ang / 0.004));
+    for (let k = 0; k < n; k++) out.push(slerp(a, b, k / n));
+  }
+  out.push(ll2v(...resolve(list[list.length - 1])).normalize());
+  return out;
+}
+function slerp(a, b, t) {
+  const ang = a.angleTo(b); if (ang < 1e-6) return a.clone();
+  const s = Math.sin(ang);
+  return a.clone().multiplyScalar(Math.sin((1 - t) * ang) / s).add(b.clone().multiplyScalar(Math.sin(t * ang) / s));
+}
+function pathLengths(pts) { const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + pts[i].distanceTo(pts[i - 1])); return L; }
+
+const routeVS = `uniform float uR, uS; varying vec2 vUv; varying vec3 vN; varying vec3 vP;
+  void main(){ vUv = uv; vN = normalize(normalMatrix * normal);
+    vec3 pos = position - normal * uR * (1.0 - uS);          // thinner tube when zoomed in
+    vec4 mv = modelViewMatrix * vec4(pos,1.0); vP = mv.xyz; gl_Position = projectionMatrix * mv; }`;
+function routeMaterial(color, opts) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color(color) }, uTime: { value: 0 }, uLen: { value: 1 }, uHi: { value: 0 },
+                uDash: { value: opts.dash }, uPulse: { value: opts.pulse ?? 1 }, uEra: { value: 1 }, uEmph: { value: 0 }, uR: { value: opts.r || 0 }, uS: { value: 1 }, uGlow: { value: opts.glow ? 1 : 0 }, uAlpha: { value: opts.alpha } },
+    vertexShader: routeVS,
+    fragmentShader: `uniform vec3 uColor; uniform float uTime, uLen, uHi, uDash, uGlow, uAlpha, uS, uPulse, uEra, uEmph;
+      varying vec2 vUv; varying vec3 vN; varying vec3 vP;
+      void main(){
+        float facing = clamp(dot(normalize(-vP), vN), 0.0, 1.0);
+        float s = vUv.x * uLen;
+        float a = uAlpha;
+        vec3 col = uColor;
+        if (uDash > 0.0) {                       // competitor: dashed (solid when focused)
+          float d = fract(s / (uDash * max(uS, 0.35)) - uTime * 0.25);
+          float dashA = smoothstep(0.0, 0.08, d) * (1.0 - smoothstep(0.55, 0.63, d));
+          a *= mix(dashA, 1.0, smoothstep(1.2, 1.8, uHi));  // focus → nearly solid ribbon
+        } else {                                  // Silk Road: moving light pulses
+          float p = pow(0.5 + 0.5 * sin(s * 70.0 / max(uS, 0.3) - uTime * 3.2), 10.0);
+          col = mix(uColor, vec3(1.0, 0.97, 0.85), p * 0.75 * uPulse);
+        }
+        if (uGlow > 0.5) { a *= pow(facing, 1.6); }
+        else { col *= 0.65 + 0.55 * facing; }
+        float hi = clamp(uHi, -1.0, 3.0);
+        col *= 1.0 + hi * 0.85;
+        a = clamp(a * (1.0 + hi * 1.25), 0.02, 1.0);
+        a *= mix(0.07, 1.0, uEra);                // timeline: unused paths fade to a ghost
+        col *= 1.0 + uEmph * 0.45;                // timeline: the era's busiest paths glow brighter
+        gl_FragColor = vec4(col, a);
+      }`,
+    transparent: true, depthWrite: false,
+    blending: opts.glow ? THREE.AdditiveBlending : THREE.NormalBlending
+  });
+}
+
+function createRoutes() {
+  const style = {
+    silk:   { r: 0.0040, alt: 1.0035, glowR: 0.015, alpha: 1.0, dash: 0, glowA: 0.50 },
+    silk_branch: { r: 0.0024, alt: 1.003, glowR: 0.008, alpha: 0.78, dash: 0, glowA: 0.26, pulse: 0.45 },
+    silk_spur:   { r: 0.0012, alt: 1.0025, glowR: 0.0045, alpha: 0.5, dash: 0, glowA: 0.13, pulse: 0.0, color: '#e0bd6c' },
+    indian: { r: 0.0020, alt: 1.003,  glowR: 0.0065, alpha: 0.72, dash: 0.022, glowA: 0.24 },
+    indian_spur: { r: 0.0011, alt: 1.0025, glowR: 0.004, alpha: 0.45, dash: 0.014, glowA: 0.12 },
+    sahara: { r: 0.0020, alt: 1.003,  glowR: 0.0065, alpha: 0.72, dash: 0.022, glowA: 0.24 }
+  };
+  for (const id in PATHS) {
+    const color0 = ROUTES[id].color;
+    const group = new THREE.Group(); group.name = 'route-' + id; scene.add(group);
+    const mats = [], hits = [], lines = [], entries = [];
+    for (const entry of PATHS[id]) {
+      const list = Array.isArray(entry) ? entry : entry.p, tier = Array.isArray(entry) ? 'main' : entry.t;
+      const era = (!Array.isArray(entry) && entry.e) || ROUTE_ERA_DEFAULT[id];
+      const st = style[tier === 'main' ? id : id + '_' + tier] || style[id];
+      const color = st.color || color0;
+      const unit = densePath(list);
+      const pts = unit.map(v => v.clone().multiplyScalar(st.alt));
+      const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+      const len = pathLengths(pts).at(-1);
+      const seg = Math.min(2000, Math.ceil(len * 400));
+      const core = routeMaterial(color, { dash: st.dash, alpha: st.alpha, r: st.r, pulse: st.pulse ?? 1 });
+      core.uniforms.uLen.value = len;
+      const glow = routeMaterial(color, { dash: st.dash, alpha: st.glowA, glow: true, r: st.glowR });
+      glow.uniforms.uLen.value = len;
+      const radial = tier === 'spur' ? 5 : 8;
+      const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, seg, st.r, radial, false), core);
+      const halo = new THREE.Mesh(new THREE.TubeGeometry(curve, seg, st.glowR, radial, false), glow);
+      tube.renderOrder = 3; halo.renderOrder = 2;
+      const hit = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.ceil(seg / 4), tier === 'main' ? 0.018 : 0.01, 5, false), new THREE.MeshBasicMaterial({ visible: false }));
+      hit.userData = { type: 'route', id };
+      group.add(tube, halo, hit);
+      mats.push(core, glow); hits.push(hit);
+      const line = { unit, L: pathLengths(unit) };
+      lines.push(line);
+      entries.push({ route: id, tier, era, key: entry.k || null, core, glow, line, weight: 1,
+        ids: list.filter(p => typeof p === 'string'), waypoints: list.map(resolve) });
+    }
+    routeObjs[id] = { group, mats, hits, lines, entries, visible: true };
+  }
+
+  // City beacons
+  const glowTex = radialTexture();
+  for (const c of CITIES) {
+    const silk = c.route === 'silk' && !c.town, town = c.town;
+    const col = new THREE.Color(ROUTES[c.route].color);
+    const g = new THREE.Group();
+    const n = ll2v(c.lat, c.lon).normalize();
+    g.position.copy(n.clone().multiplyScalar(R * 1.002));
+    g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+    const dot = new THREE.Mesh(new THREE.CircleGeometry(town ? 0.0028 : silk ? (c.major ? 0.0065 : 0.005) : 0.0045, 20),
+      new THREE.MeshBasicMaterial({ color: (silk || (town && c.route === 'silk')) ? 0xfff4d6 : col.clone().lerp(new THREE.Color(1, 1, 1), 0.35), toneMapped: false }));
+    dot.position.z = 0.003; dot.renderOrder = 5;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.75, 1, 40),
+      new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+    ring.position.z = 0.0025; ring.scale.setScalar(silk ? 0.012 : 0.008); ring.renderOrder = 4; ring.visible = !town;
+    const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: col, blending: THREE.AdditiveBlending, depthWrite: false, opacity: town ? 0.45 : silk ? (c.major ? 0.95 : 0.75) : 0.6 }));
+    spr.scale.setScalar(town ? 0.018 : silk ? (c.major ? 0.05 : 0.036) : 0.03); spr.position.z = 0.004; spr.renderOrder = 6;
+    const hit = new THREE.Mesh(new THREE.SphereGeometry(town ? 0.011 : 0.02, 8, 6), new THREE.MeshBasicMaterial({ visible: false }));
+    hit.userData = { type: 'city', id: c.id };
+    g.add(dot, ring, spr, hit);
+    routeObjs[c.route].group.add(g);
+
+    // Only major AP World hubs get labels + clickable city picks; waypoints stay path-only.
+    if (!c.label) { g.visible = false; continue; }
+    const el = document.createElement('div');
+    el.className = 'lbl ' + c.route + (['gao', 'sijilmasa', 'kilwa'].includes(c.id) ? ' left' : '');
+    el.innerHTML = `<b>${c.name}</b>`;
+    el.querySelector('b').addEventListener('click', () => selectCity(c.id));
+    el.querySelector('b').addEventListener('pointerenter', () => setHover({ type: 'city', id: c.id }));
+    el.querySelector('b').addEventListener('pointerleave', () => setHover(null));
+    const label = new CSS2DObject(el);
+    label.position.copy(n.clone().multiplyScalar(R * 1.004));
+    scene.add(label);
+    cityObjs.push({ prefLeft: el.classList.contains('left'), data: c, group: g, ring, spr, sprBase: spr.material.opacity, label, el, n, phase: Math.random() * 6, era: [1, 1, 1, 1], weight: 1 });
+  }
+}
+
+function radialTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.18, 'rgba(255,255,255,.55)');
+  g.addColorStop(0.45, 'rgba(255,255,255,.12)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+/* ---------- CARAVANS (camels) + DHOW ----------
+   Many small caravans walk the WHOLE Silk Road network from page load: several on the main
+   road from Chang'an to Constantinople plus one on most branches. They are always moving.
+   All camels are drawn with a handful of InstancedMeshes (one per body part), so 50+
+   camels cost about as much as one. EDIT: add/remove caravans in the CARAVANS list. */
+const CARAVAN = {
+  baseScale: 0.0042,   // camel size when zoomed in (a camel is ~2.1 units tall before scaling)
+  zoomBoost: 2.0,      // max size multiplier at the overview so they stay readable
+  speed: 0.0042,       // globe units per second
+  spacing: 0.0145,     // gap between camels in a train (scaled with the zoom boost)
+  side: 0.0065         // walk beside the glowing route line, not on it
+};
+// path = index into PATHS.silk (0 = main road, 1 = southern Tarim, 2 = northern steppe, 4 = steppe to the Volga,
+// 6 = Pamirs/Balkh, 7 = road to India, 8 = Merv-Kandahar, 9 = Tabriz-Trebizond, 10 = Levant, 11 = Bukhara-Urgench)
+// at = start point (0..1 along the path), dir = 1 follows the path order (westward on the main road), camels = train length
+const CARAVANS = [
+  { path: 0, at: 0.36, dir: 1, camels: 5 },     // lead caravan (Central Asia, heading west)
+  { path: 0, at: 0.03, dir: 1, camels: 4 },
+  { path: 0, at: 0.17, dir: -1, camels: 3 },
+  { path: 0, at: 0.52, dir: -1, camels: 4 },
+  { path: 0, at: 0.66, dir: 1, camels: 3 },
+  { path: 0, at: 0.80, dir: -1, camels: 4 },
+  { path: 0, at: 0.93, dir: 1, camels: 3 },
+  { path: 1, at: 0.45, dir: 1, camels: 3 },
+  { path: 2, at: 0.40, dir: -1, camels: 3 },
+  { path: 4, at: 0.50, dir: 1, camels: 3 },
+  { path: 6, at: 0.50, dir: -1, camels: 3 },
+  { path: 7, at: 0.45, dir: -1, camels: 3 },
+  { path: 8, at: 0.50, dir: -1, camels: 2 },
+  { path: 9, at: 0.50, dir: 1, camels: 3 },
+  { path: 10, at: 0.50, dir: 1, camels: 3 },
+  { path: 11, at: 0.50, dir: 1, camels: 2 }
+];
+const CAMEL_COATS = [0xb07a45, 0x9c6a3a, 0xc08a52, 0x8f5f33, 0xa8743f, 0xb98650];
+const CAMEL_BLANKETS = [0xa8232a, 0x27559a, 0x6f2a85, 0x1d6f53, 0x9c3f1c, 0x8a1f4a];
+const CAMEL_LOADS = [0xd94f6f, 0xf2c14e, 0x4f7fd9, 0xe9e1cf, 0x58b28a, 0xe07a2f];
+
+// Build a geometry from several posed primitives, each with its own vertex colour, merged into one.
+function posed(geo, color, pos = [0, 0, 0], scale = [1, 1, 1], rot = [0, 0, 0]) {
+  const m = new THREE.Matrix4().compose(new THREE.Vector3(...pos), new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)), new THREE.Vector3(...scale));
+  const out = geo.clone().applyMatrix4(m);
+  const c = new THREE.Color(color), n = out.attributes.position.count, col = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) col.set([c.r, c.g, c.b], i * 3);
+  out.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return out;
+}
+function mergeParts(parts) { const g = mergeGeometries(parts, false); parts.forEach(p => p.dispose()); return g; }
+// Tube along a smooth curve whose radius tapers from r0 to r1 (necks, tails)
+function makeTaperedTube(points, r0, r1, tubular = 20, radial = 10) {
+  const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)));
+  const geo = new THREE.TubeGeometry(curve, tubular, 1, radial, false);
+  const pos = geo.attributes.position, c = new THREE.Vector3(), v = new THREE.Vector3();
+  for (let i = 0; i <= tubular; i++) {
+    curve.getPointAt(i / tubular, c);
+    const r = THREE.MathUtils.lerp(r0, r1, Math.pow(i / tubular, 0.8));
+    for (let j = 0; j <= radial; j++) {
+      const k = i * (radial + 1) + j;
+      v.fromBufferAttribute(pos, k).sub(c).multiplyScalar(r).add(c); pos.setXYZ(k, v.x, v.y, v.z);
+    }
+  }
+  return geo;
+}
+
+// Camel anatomy (Bactrian, two humps). Units: metres-ish, +x forward, +y up, feet at y = 0.
+// Real proportions: ~2.1 tall at the humps, ~2.7 long, long thin legs, deep barrel body, S-shaped neck.
+const HIP_Y = 1.22, UPPER = 0.6, LOWER = 0.58;
+const LEG_SPOTS = [[0.6, 0.17, 1], [0.6, -0.17, 1], [-0.6, 0.17, 0], [-0.6, -0.17, 0]];   // x, z, front?
+function buildCamelGeometries() {
+  const S = new THREE.SphereGeometry(1, 20, 14), FUR = 0xffffff, HAIR = 0x7d5a36, DARK = 0x2a1d12;
+  // body: torso barrel, chest, rump, belly, two humps with darker woolly tops, short tail
+  const body = mergeParts([
+    posed(S, FUR, [0.02, 1.43, 0], [0.74, 0.34, 0.29]),
+    posed(S, FUR, [0.5, 1.4, 0], [0.33, 0.33, 0.27]),           // chest
+    posed(S, FUR, [-0.52, 1.46, 0], [0.3, 0.3, 0.26]),          // rump
+    posed(S, FUR, [0.0, 1.25, 0], [0.5, 0.2, 0.24]),            // belly
+    posed(S, FUR, [0.3, 1.74, 0], [0.2, 0.27, 0.17], [0, 0, -0.12]),    // front hump
+    posed(S, FUR, [-0.3, 1.74, 0], [0.21, 0.26, 0.17], [0, 0, 0.12]),   // rear hump
+    posed(S, HAIR, [0.31, 1.96, 0], [0.13, 0.08, 0.11]),        // woolly hump tops
+    posed(S, HAIR, [-0.31, 1.95, 0], [0.13, 0.08, 0.11]),
+    posed(S, HAIR, [0.62, 1.26, 0], [0.16, 0.12, 0.17]),        // shaggy chest / upper legs
+    posed(makeTaperedTube([[-0.8, 1.55, 0], [-0.88, 1.38, 0], [-0.9, 1.16, 0]], 0.04, 0.02, 8, 6), FUR),   // tail
+    posed(S, HAIR, [-0.905, 1.1, 0], [0.04, 0.08, 0.04])        // tail tuft
+  ]);
+  // saddle blanket draped between the humps (tinted per caravan)
+  const L = Math.PI * 1.1, blanketG = new THREE.CylinderGeometry(0.34, 0.34, 0.42, 20, 1, true, 1.5 * Math.PI - L / 2, L);
+  blanketG.rotateZ(-Math.PI / 2);
+  const blanket = mergeParts([posed(blanketG, 0xffffff, [0, 1.47, 0], [1, 1.06, 0.95]),
+    posed(new THREE.BoxGeometry(0.44, 0.05, 0.62), 0xffffff, [0, 1.83, 0])]);
+  // gear: saddle bags, ropes and gold trim (not tinted)
+  const bag = new THREE.CapsuleGeometry(0.11, 0.22, 4, 10); bag.rotateZ(Math.PI / 2);
+  const gear = mergeParts([
+    posed(bag, 0x8a5a2b, [0, 1.36, 0.34], [1, 1.1, 0.7]), posed(bag, 0x8a5a2b, [0, 1.36, -0.34], [1, 1.1, 0.7]),
+    posed(new THREE.BoxGeometry(0.46, 0.03, 0.66), 0xf2c14e, [0, 1.62, 0]),     // gold trim band
+    posed(new THREE.BoxGeometry(0.03, 0.5, 0.74), 0x3d2a18, [0.12, 1.5, 0]),    // girth straps
+    posed(new THREE.BoxGeometry(0.03, 0.5, 0.74), 0x3d2a18, [-0.12, 1.5, 0])
+  ]);
+  // trade bale on top (tinted with the goods colour)
+  const baleG = new THREE.CylinderGeometry(0.11, 0.11, 0.6, 14); baleG.rotateX(Math.PI / 2);
+  const bale = mergeParts([posed(baleG, 0xffffff, [0, 1.95, 0]),
+    posed(new THREE.CylinderGeometry(0.115, 0.115, 0.04, 14), 0x4a3420, [0, 1.95, 0.17], [1, 1, 1], [Math.PI / 2, 0, 0]),
+    posed(new THREE.CylinderGeometry(0.115, 0.115, 0.04, 14), 0x4a3420, [0, 1.95, -0.17], [1, 1, 1], [Math.PI / 2, 0, 0])]);
+  // neck + head, authored relative to the neck pivot at the chest (so the head can nod)
+  const NP = [0.72, 1.5], o = ([x, y, z]) => [x - NP[0], y - NP[1], z];
+  const head = mergeParts([
+    posed(makeTaperedTube([[0.62, 1.52, 0], [0.92, 1.4, 0], [1.16, 1.42, 0], [1.33, 1.62, 0], [1.42, 1.9, 0]].map(o), 0.16, 0.075, 18, 10), FUR),
+    posed(S, HAIR, o([0.98, 1.3, 0]), [0.2, 0.09, 0.09], [0, 0, -0.25]),     // throat beard
+    posed(S, FUR, o([1.53, 1.97, 0]), [0.17, 0.085, 0.08], [0, 0, -0.18]),   // skull
+    posed(S, FUR, o([1.68, 1.92, 0]), [0.085, 0.065, 0.065]),                // muzzle
+    posed(S, DARK, o([1.75, 1.93, 0]), [0.015, 0.012, 0.035]),               // nostrils
+    posed(S, HAIR, o([1.42, 2.04, 0]), [0.07, 0.04, 0.06]),                  // forelock
+    posed(new THREE.ConeGeometry(0.025, 0.07, 6), FUR, o([1.42, 2.08, 0.06]), [1, 1, 1], [0.4, 0, 0.3]),   // ears
+    posed(new THREE.ConeGeometry(0.025, 0.07, 6), FUR, o([1.42, 2.08, -0.06]), [1, 1, 1], [-0.4, 0, 0.3]),
+    posed(S, DARK, o([1.55, 2.0, 0.072]), [0.016, 0.016, 0.012]),            // eyes
+    posed(S, DARK, o([1.55, 2.0, -0.072]), [0.016, 0.016, 0.012]),
+    posed(new THREE.TorusGeometry(0.075, 0.012, 6, 14), 0xc23a2a, o([1.64, 1.94, 0]), [1, 1, 1], [0, Math.PI / 2, -0.2])   // halter
+  ]);
+  // legs: upper (thigh/forearm, thick at the top) in the hip frame, lower (cannon + padded foot) in the knee frame
+  const upperG = new THREE.CylinderGeometry(0.1, 0.055, UPPER, 10); upperG.translate(0, -UPPER / 2, 0);
+  const legUpper = mergeParts([posed(upperG, FUR), posed(S, FUR, [0, -0.02, 0], [0.12, 0.14, 0.11]), posed(S, FUR, [0, -UPPER, 0], [0.06, 0.065, 0.06])]);
+  const lowerG = new THREE.CylinderGeometry(0.045, 0.036, LOWER, 8); lowerG.translate(0, -LOWER / 2, 0);
+  const legLower = mergeParts([posed(lowerG, FUR), posed(S, 0x3b2a1a, [0.03, -LOWER - 0.01, 0], [0.11, 0.035, 0.085])]);
+  // merchant riding each lead camel: robe, sash, face and turban
+  const rider = mergeParts([
+    posed(new THREE.ConeGeometry(0.2, 0.28, 14, 1), 0x1f3d7a, [0, 0.1, 0]),
+    posed(new THREE.CapsuleGeometry(0.085, 0.18, 4, 10), 0x1f3d7a, [0, 0.33, 0]),
+    posed(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 12), 0xc9972c, [0, 0.27, 0]),
+    posed(S, 0xb98059, [0.01, 0.53, 0], [0.065, 0.07, 0.065]),
+    posed(S, 0xf1e6cc, [0, 0.58, 0], [0.08, 0.055, 0.08]),
+    posed(new THREE.CapsuleGeometry(0.03, 0.16, 3, 6), 0x1f3d7a, [0.1, 0.35, 0.09], [1, 1, 1], [0.4, 0, -1.0]),
+    posed(new THREE.CapsuleGeometry(0.03, 0.16, 3, 6), 0x1f3d7a, [0.1, 0.35, -0.09], [1, 1, 1], [-0.4, 0, -1.0])
+  ]);
+  S.dispose();
+  return { body, blanket, gear, bale, head, legUpper, legLower, rider, neckPivot: NP };
+}
+
+// One reusable skeleton: pose it for a camel, then copy each joint's matrix into the instanced meshes
+function makeCamelRig(np) {
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const neck = new THREE.Group(); neck.position.set(np[0], np[1], 0); body.add(neck);
+  const rider = new THREE.Group(); rider.position.set(0, 1.82, 0); body.add(rider);
+  const hips = [], knees = [];
+  for (const [x, z] of LEG_SPOTS) {
+    const hip = new THREE.Group(); hip.position.set(x, HIP_Y, z); root.add(hip);
+    const knee = new THREE.Group(); knee.position.y = -UPPER; hip.add(knee);
+    hips.push(hip); knees.push(knee);
+  }
+  const shadow = new THREE.Group(); shadow.position.y = 0.01; shadow.rotation.x = -Math.PI / 2; shadow.scale.set(1.35, 0.5, 1); root.add(shadow);
+  return { root, body, neck, rider, hips, knees, shadow };
+}
+
+let caravanSys = null;   // {meshes, rig, caravans, total}
+function createCaravan() {
+  const G = buildCamelGeometries();
+  caravan = new THREE.Group(); caravan.name = 'caravans';
+  routeObjs.silk.group.add(caravan);
+  const total = CARAVANS.reduce((n, c) => n + c.camels, 0);
+  const std = (o) => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88, metalness: 0, ...o });
+  const furM = std({ emissive: 0x1c1208 }), clothM = std({ roughness: 0.7, emissive: 0x160a06 }), gearM = std({ emissive: 0x120a04 });
+  const mk = (geo, mat, count) => { const m = new THREE.InstancedMesh(geo, mat, count); m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); caravan.add(m); return m; };
+  const meshes = {
+    body: mk(G.body, furM, total), head: mk(G.head, furM, total),
+    legU: mk(G.legUpper, furM, total * 4), legL: mk(G.legLower, furM, total * 4),
+    blanket: mk(G.blanket, clothM, total), gear: mk(G.gear, gearM, total), bale: mk(G.bale, gearM, total),
+    rider: mk(G.rider, std({ emissive: 0x0a0a10 }), CARAVANS.length),
+    shadow: mk(new THREE.CircleGeometry(1, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3, depthWrite: false }), total)
+  };
+  const caravans = []; let idx = 0;
+  CARAVANS.forEach((spec, ci) => {
+    const entry = routeObjs.silk.entries[spec.path] || routeObjs.silk.entries[0];
+    const len = entry.line.L.at(-1);
+    const cv = { spec, line: entry.line, len, s: spec.at * len, dir: spec.dir, camels: [], lead: new THREE.Vector3() };
+    for (let k = 0; k < spec.camels; k++, idx++) {
+      const coat = new THREE.Color(CAMEL_COATS[(idx * 7) % CAMEL_COATS.length]);
+      meshes.body.setColorAt(idx, coat); meshes.head.setColorAt(idx, coat);
+      for (let j = 0; j < 4; j++) { meshes.legU.setColorAt(idx * 4 + j, coat); meshes.legL.setColorAt(idx * 4 + j, coat); }
+      meshes.blanket.setColorAt(idx, new THREE.Color(CAMEL_BLANKETS[(ci + k) % CAMEL_BLANKETS.length]));
+      meshes.bale.setColorAt(idx, new THREE.Color(CAMEL_LOADS[(ci * 3 + k) % CAMEL_LOADS.length]));
+      cv.camels.push({ i: idx, phase: idx * 1.37 });
+    }
+    caravans.push(cv);
+  });
+  for (const m of Object.values(meshes)) if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  caravanSys = { meshes, rig: makeCamelRig(G.neckPivot), caravans, total };
+  caravan.userData.caravans = caravans;
+
+  // Optional dhow on the Indian Ocean
+  dhow = new THREE.Group();
+  const hullM = new THREE.MeshStandardMaterial({ color: 0x5a3a1e, roughness: 0.8, emissive: 0x140a02 });
+  const hull = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), hullM);
+  hull.scale.set(1.0, 0.35, 0.3); hull.position.y = 0.25; dhow.add(hull);
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.4, 6), hullM); mast.position.set(0.1, 0.9, 0); dhow.add(mast);
+  const sg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.8, 0.45, 0), new THREE.Vector3(0.9, 1.75, 0), new THREE.Vector3(0.15, 0.4, 0)]);
+  sg.computeVertexNormals();
+  const sail = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ color: 0xf1e6cc, side: THREE.DoubleSide, emissive: 0x3a352a })); dhow.add(sail);
+  dhow.scale.setScalar(0.014);
+  routeObjs.indian.group.add(dhow);
+}
+
+// Bigger models when zoomed out so the caravans and dhow stay readable on the whole globe
+function travellerZoomScale(dist) { return THREE.MathUtils.clamp(1 + (dist - 1.5) * 0.6, 1, CARAVAN.zoomBoost); }
+
+// Walk cycle (pacing gait: both legs on one side swing together), body roll and head nod
+function poseCamel(rig, t, phase) {
+  const ph = t * 5.2 + phase;
+  rig.hips.forEach((hip, j) => {
+    const a = ph + (LEG_SPOTS[j][1] > 0 ? 0 : Math.PI);
+    hip.rotation.z = Math.sin(a) * 0.34;
+    rig.knees[j].rotation.z = -Math.max(0, Math.cos(a)) * (LEG_SPOTS[j][2] ? 0.75 : 0.55);
+  });
+  rig.body.position.y = Math.abs(Math.sin(ph)) * 0.03;
+  rig.body.rotation.x = Math.sin(ph) * 0.04;
+  rig.neck.rotation.z = Math.sin(ph * 2) * 0.05 - 0.02;
+}
+
+const _zero = new THREE.Matrix4().makeScale(0, 0, 0);
+// Runs every frame from load: every caravan keeps walking; trains wrap round at the ends of their road
+// (camels fade in/out at the road ends instead of turning round on the spot).
+function updateCaravan(dt, t, dist) {
+  const { meshes, rig, caravans } = caravanSys, k = travellerZoomScale(dist);
+  const scale = CARAVAN.baseScale * k, gap = CARAVAN.spacing * k, edge = 0.02;
+  caravans.forEach((cv, ci) => {
+    cv.s = (cv.s + dt * CARAVAN.speed + cv.len) % cv.len;     // distance travelled along the road
+    cv.camels.forEach((cm, n) => {
+      let s = cv.s - n * gap; s = ((s % cv.len) + cv.len) % cv.len;
+      const along = cv.dir > 0 ? s : cv.len - s;              // position measured from the path start
+      const fade = THREE.MathUtils.smoothstep(Math.min(s, cv.len - s), 0, edge);
+      placeOnPath(rig.root, cv.line, along, cv.dir, CARAVAN.side * k, 1.0004);
+      rig.root.scale.setScalar(scale * fade);
+      poseCamel(rig, t, cm.phase);
+      rig.root.updateMatrixWorld(true);
+      if (n === 0) rig.root.getWorldPosition(cv.lead);
+      const i = cm.i, hidden = fade < 0.02;
+      meshes.body.setMatrixAt(i, hidden ? _zero : rig.body.matrixWorld);
+      meshes.blanket.setMatrixAt(i, hidden ? _zero : rig.body.matrixWorld);
+      meshes.gear.setMatrixAt(i, hidden ? _zero : rig.body.matrixWorld);
+      meshes.bale.setMatrixAt(i, hidden || n === 0 ? _zero : rig.body.matrixWorld);   // the lead camel carries the merchant
+      meshes.head.setMatrixAt(i, hidden ? _zero : rig.neck.matrixWorld);
+      meshes.shadow.setMatrixAt(i, hidden ? _zero : rig.shadow.matrixWorld);
+      for (let j = 0; j < 4; j++) {
+        meshes.legU.setMatrixAt(i * 4 + j, hidden ? _zero : rig.hips[j].matrixWorld);
+        meshes.legL.setMatrixAt(i * 4 + j, hidden ? _zero : rig.knees[j].matrixWorld);
+      }
+      if (n === 0) meshes.rider.setMatrixAt(ci, hidden ? _zero : rig.rider.matrixWorld);
+    });
+  });
+  for (const m of Object.values(meshes)) m.instanceMatrix.needsUpdate = true;
+}
+function updateDhow(dt, t, dist) {
+  const line = routeObjs.indian.lines[0], total = line.L.at(-1);
+  state.dhowS += dt * 0.008 * state.dhowDir;
+  if (state.dhowS > total - 0.01) state.dhowDir = -1;
+  if (state.dhowS < 0.01) state.dhowDir = 1;
+  dhow.scale.setScalar(0.011 * travellerZoomScale(dist));
+  placeOnPath(dhow, line, state.dhowS, state.dhowDir, 0.008, 1.0004);
+  dhow.rotateX(Math.sin(t * 2) * 0.05);
+}
+
+// Place an object on the globe at arc-length s along a polyline, facing direction dir
+const _q = new THREE.Vector3(), _m = new THREE.Matrix4();
+function placeOnPath(obj, line, s, dir, side = 0, lift = 1.0) {
+  const { unit, L } = line, total = L.at(-1);
+  s = THREE.MathUtils.clamp(s, 0, total);
+  let i = 1, hi = L.length - 1;
+  while (i < hi) { const mid = (i + hi) >> 1; if (L[mid] < s) i = mid + 1; else hi = mid; }
+  const t = (s - L[i - 1]) / Math.max(1e-9, L[i] - L[i - 1]);
+  const p = unit[i - 1].clone().lerp(unit[i], t).normalize();
+  const up = p.clone();
+  const fwd = unit[i].clone().sub(unit[i - 1]).multiplyScalar(dir);
+  fwd.sub(up.clone().multiplyScalar(fwd.dot(up))).normalize();
+  const right = fwd.clone().cross(up).normalize();
+  const sideVec = unit[i].clone().sub(unit[i - 1]).cross(up).normalize();   // fixed side of the road
+  obj.position.copy(p.multiplyScalar(R * lift)).add(sideVec.multiplyScalar(side));
+  _m.makeBasis(fwd, up, right);
+  obj.quaternion.setFromRotationMatrix(_m);
+}
+
+/* ---------- CAMERA FLIGHTS ---------- */
+// Close to the ground the camera tilts up towards the horizon (cinematic), so to look AT a
+// place we park the camera a little south of it.
+function tiltFor(d) { return THREE.MathUtils.degToRad(34) * THREE.MathUtils.clamp((2.25 - d) / 0.95, 0, 1); }
+function groundOffsetDeg(d) {
+  const th = tiltFor(d); if (th <= 0) return 0;
+  const c = Math.cos(th), t = d * c - Math.sqrt(Math.max(0, d * d * c * c - d * d + 1));
+  return THREE.MathUtils.radToDeg(Math.atan2(t * Math.sin(th), d - t * c));
+}
+function flyTo(lat, lon, dist, dur = 1.8) {
+  autoRotate = false; settle = null;
+  setCine(false);
+  const from = camera.position.clone();
+  const toDir = ll2v(Math.max(-80, lat - groundOffsetDeg(dist)), lon).normalize();
+  flight = { a: from.clone().normalize(), b: toDir, d0: from.length(), d1: dist, t: 0, dur };
+}
+function updateFlight(dt) {
+  if (!flight) return;
+  flight.t = Math.min(1, flight.t + dt / flight.dur);
+  const k = flight.t < 0.5 ? 4 * flight.t ** 3 : 1 - Math.pow(-2 * flight.t + 2, 3) / 2;
+  const dir = slerp(flight.a, flight.b, k);
+  // arc outwards a little during long flights for a cinematic feel
+  const ang = flight.a.angleTo(flight.b);
+  const lift = Math.sin(Math.PI * k) * (flight.cine ? 0.22 + Math.min(0.75, ang * 0.6) : Math.min(0.6, ang * 0.5));
+  camera.position.copy(dir.multiplyScalar(THREE.MathUtils.lerp(flight.d0, flight.d1, k) + lift));
+  if (flight.t >= 1) { const f = flight; flight = null; if (f.onDone) f.onDone(); }
+}
+const mob = () => window.innerWidth < 760 ? 1.45 : 1;
+const VIEWS = {
+  silk:     () => flyTo(38, 72, 2.15 * mob()),
+  indian:   () => flyTo(9, 72, 2.75 * mob()),
+  sahara:   () => flyTo(22, 12, 2.45 * mob()),
+  overview: () => flyTo(30, mob() > 1 ? 66 : 60, overviewDist)
+};
+
+/* ---------- UI ---------- */
+function showInfo(id) {
+  // Route / city info cards removed — fly + focus only.
+  if (ROUTES[id]) { setFocusRoute(id); window.silk.selected = id; }
+  else if (CITY[id]) selectCity(id);
+}
+function selectCity(id) {
+  const c = CITY[id];
+  if (!c || !c.label || !routeObjs[c.route].visible) return;
+  closeSidePanel();
+  syncRouteFocusToCity(id);  // focus the city's own route (no camera move) before the fly-in
+  selectedCity = id; window.silk.selected = id;
+  cityObjs.forEach(o => o.el.classList.toggle('sel', o.data.id === id));
+  cinematicFlyToCity(id);   // zoom / fly only — no fact card
+  Sound.chime('city');
+}
+// Same highlight + button state as clicking a route button, but WITHOUT its camera move
+function applyRouteFocus(id) {
+  if (!ROUTES[id]) return;
+  if (!routeObjs[id].visible) { setRouteVisible(id, true); document.querySelector(`.legend input[data-route="${id}"]`).checked = true; }
+  setFocusRoute(id);             // highlight this route brightly; dim the others
+  setActiveButton(id);
+}
+// City click: switch the focused route to the city's route (no-op if it's already focused)
+function syncRouteFocusToCity(id) {
+  const route = CITY[id] && CITY[id].route;
+  if (!ROUTES[route] || focusRoute === route) return false;
+  applyRouteFocus(route);
+  return true;
+}
+function setActiveButton(name) {
+  document.querySelectorAll('.fly button').forEach(b => b.classList.toggle('active', b.dataset.fly === name));
+}
+function setRouteVisible(id, on) {
+  const r = routeObjs[id]; r.visible = on; r.group.visible = on;
+  cityObjs.filter(c => c.data.route === id).forEach(c => c.label.visible = on);
+  const lab = document.querySelector(`.legend input[data-route="${id}"]`).closest('label');
+  lab.classList.toggle('off', !on);
+}
+function setHover(h) {
+  hovered = h;
+  refreshRouteHighlight();
+  cityObjs.forEach(c => c.el.classList.toggle('hot', !!(h && h.type === 'city' && h.id === c.data.id)));
+  renderer.domElement.style.cursor = h ? 'pointer' : '';
+}
+
+function initUI() {
+  document.querySelectorAll('.fly button').forEach(b => b.addEventListener('click', () => {
+    const v = b.dataset.fly; setActiveButton(v); VIEWS[v]();
+    if (ROUTES[v]) applyRouteFocus(v);   // highlight this route brightly; dim the others
+    else if (v === 'overview') setFocusRoute(null);   // Earth overview — all routes equal
+  }));
+  document.querySelectorAll('.legend input').forEach(inp => inp.addEventListener('change', () => setRouteVisible(inp.dataset.route, inp.checked)));
+
+  // Pointer: hover + click (ignore drags)
+  const cv = renderer.domElement; let down = null;
+  cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); pointer.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); if (e.pointerType === 'mouse') setHover(pick()); });
+  cv.addEventListener('pointerleave', () => { pointer.set(-9, -9); setHover(null); });
+  cv.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+  cv.addEventListener('pointerup', e => {
+    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+    const r = cv.getBoundingClientRect(); pointer.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+    const h = pick(); if (!h) return;
+    if (h.type === 'city') selectCity(h.id);
+    else { setFocusRoute(h.id); setActiveButton(h.id); VIEWS[h.id](); }
+  });
+}
+
+function pick() {
+  raycaster.setFromCamera(pointer, camera);
+  const objs = [earth];
+  for (const id in routeObjs) if (routeObjs[id].visible) objs.push(...routeObjs[id].hits);
+  cityObjs.forEach(c => { if (routeObjs[c.data.route].visible && c.weight > 0.3) objs.push(c.group.children[3]); });
+  const hits = raycaster.intersectObjects(objs, false);
+  const earthHit = hits.find(h => h.object === earth);
+  const limit = earthHit ? earthHit.distance + 0.02 : Infinity;
+  const valid = hits.filter(h => h.object !== earth && h.distance < limit);
+  return (valid.find(h => h.object.userData.type === 'city') || valid[0] || {}).object?.userData || null;
+}
+
+/* ---------- LABEL DECLUTTER ---------- */
+const TOP = ['samarkand','changan','constantinople','kashgar','baghdad','dunhuang','turpan','malacca','calicut','timbuktu'];
+let _ui = null, _uiT = 0;
+function uiRects() {
+  const now = performance.now();
+  if (!_ui || now - _uiT > 400) {
+    _uiT = now; const hr = document.getElementById('hero').getBoundingClientRect();
+    _ui = [...document.querySelectorAll('.title, .controls, #hint, #toolbar, #era-banner.show, #sidepanel.open')]
+      .filter(e => getComputedStyle(e).visibility !== 'hidden')
+      .map(e => e.getBoundingClientRect()).filter(r => r.width > 0)
+      .map(r => [r.left - hr.left - 4, r.top - hr.top - 4, r.right - hr.left + 4, r.bottom - hr.top + 4]);
+  }
+  return _ui.slice();
+}
+function prio(c) { const i = TOP.indexOf(c.data.id); return (i >= 0 ? 100 - i : 0) + (c.data.major ? 20 : 0) + (c.data.town ? -15 : 0) + (c.data.route === 'silk' ? 10 : 0); }
+const _v = new THREE.Vector3();
+function updateLabels() {
+  const camDir = camera.position.clone().normalize(), dist = camera.position.length();
+  const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
+  const small = w < 760;
+  const placed = uiRects();
+  const order = [...cityObjs].sort((a, b) => prio(b) - prio(a));
+  for (const c of order) {
+    let show = routeObjs[c.data.route].visible && c.n.dot(camDir) > 0.28 && c.weight > 0.45;
+    const detail = small ? dist < 2.6 : dist < 2.35;
+    if (show && !c.data.major && !detail) show = false;
+    if (show && c.data.town && dist > (small ? 1.85 : 1.62)) show = false;   // tiny oases only when very close
+    if (show) {
+      _v.copy(c.label.position).project(camera);
+      const x = (_v.x + 1) / 2 * w, y = (1 - _v.y) / 2 * h;
+      const tw = c.data.name.length * (small ? 6.2 : 6.9) + 16;
+      let left = c.prefLeft;
+      if (!left && x + 9 + tw > w - 4) left = true;
+      if (left && x - 9 - tw < 4) left = false;
+      c.el.classList.toggle('left', left);
+      const box = [left ? x - 9 - tw : x + 4, y - 12, left ? x : x + 9 + tw, y + 10];
+      if (box[0] < 2 || box[2] > w - 2 || box[1] < 2 || box[3] > h - 2) show = false;   // never cut off at the screen edge
+      else if (placed.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) show = false;
+      else placed.push(box);
+    }
+    c.el.classList.toggle('hide', !show);
+  }
+}
+
+/* ---------- PAGE HELPERS ---------- */
+function fillFacts() {                         // live numbers taken from the map data
+  const el = document.getElementById('fact-cities');
+  if (el) el.textContent = CITIES.filter(c => c.route === 'silk').length;
+  const cam = document.getElementById('fact-camels');
+  if (cam && typeof caravanSys !== 'undefined' && caravanSys) cam.textContent = caravanSys.total;
+}
+
+/* =====================================================================
+   FEATURE DATA (EDIT freely): timeline weights, city card extras
+   ===================================================================== */
+// Route weight at each timeline stop [I, II, III, IV] (Silk Road paths carry their own `e:` values in PATHS)
+const ROUTE_ERA_DEFAULT = { silk: [1, 1, 1, 0.5], indian: [0.5, 0.8, 0.9, 1], sahara: [0.1, 0.5, 1, 0.9] };
+// Per-city weights per timeline stop [I, II, III, IV]; every other city takes the busiest path it sits on.
+const CITY_ERA = {
+  changan: [1, 1, 0.5, 0.6], dunhuang: [1, 1, 0.7, 0.3], palmyra: [1, 0.2, 0.1, 0],
+  constantinople: [0.35, 1, 1, 0.6], baghdad: [0.7, 1, 0.7, 0.6], merv: [1, 1, 0.5, 0.3],
+  samarkand: [1, 1, 1, 1], turpan: [0.8, 1, 1, 0.5], kashgar: [1, 1, 1, 0.8], bukhara: [1, 1, 1, 0.8],
+  balkh: [1, 0.8, 0.6, 0.5], antioch: [1, 0.7, 0.4, 0.3],
+  guangzhou: [0.6, 1, 1, 0.8], malacca: [0, 0, 0.2, 1], kilwa: [0, 0.3, 1, 1], calicut: [0, 0.2, 1, 1],
+  hormuz: [0.2, 0.5, 1, 1], aden: [0.2, 0.5, 1, 1], mogadishu: [0, 0.4, 1, 1],
+  timbuktu: [0, 0, 1, 1], gao: [0.2, 0.6, 1, 1], cairo: [0, 0.4, 1, 1], sijilmasa: [0, 0.7, 1, 0.6],
+  taghaza: [0, 0.2, 1, 0.8]
+};
+// Timeline stops (EDIT the names). The route morph per stop comes from the e:[...] values in PATHS.
+const ERAS = [ { name: 'Era I' }, { name: 'Era II' }, { name: 'Era III' }, { name: 'Era IV' } ];
+// City card extras (optional, EDIT): { note: 'text shown on the card' }
+const CITY_FACTS = {};
+const GOODS = [
+  { id: 'silk', name: 'Silk', color: '#ff4f8b' },
+  { id: 'spice', name: 'Spices', color: '#ff9a2e' },
+  { id: 'porcelain', name: 'Porcelain', color: '#9cc4ff' }
+];
+const GOODS_FLOW = { perUnit: 210, speed: [0.024, 0.036], size: 15, lift: 1.0045, spread: 0.0045, mobileFactor: 0.6 };
+
+/* =====================================================================
+   DAY / NIGHT: a moving sun direction drives the Earth lighting, the city lights
+   on the night side, the warm terminator, the atmosphere glow AND the visible Sun.
+   'live' = moving sun (default) · 'studio' = classic always-daylight key light.
+   ===================================================================== */
+const DAYNIGHT = { mode: 'live', lat: 12, startAhead: 80, degPerSec: 1.6,
+  key: { live: 3.2, studio: 2.9 }, fill: { live: 0.2, studio: 0.32 }, lights: { live: 2.4, studio: 1.4 },
+  nightDim: { live: 0.32, studio: 1 }, twilight: { live: 0.16, studio: 0 } };
+const EARTH_UNIFORMS = { uTwilight: { value: 0.16 }, uNightDim: { value: 0.32 } };
+const sunDir = new THREE.Vector3(), lightDir = new THREE.Vector3(), studioDir = new THREE.Vector3();
+const _dnA = new THREE.Vector3(), _dnB = new THREE.Vector3(), _dnC = new THREE.Vector3();
+let dnBlend = 1;                                   // 1 = live, 0 = studio (eased)
+
+function initDayNight() {
+  const ll = v2ll(camera.position);
+  state.sunLon = ll.lon + DAYNIGHT.startAhead;     // morning sun to the east of the opening view
+  state.sunLat = DAYNIGHT.lat;
+  sunDir.copy(ll2v(state.sunLat, state.sunLon)).normalize();
+  lightDir.copy(sunDir);
+  placeSunSprite(1);
+}
+function setDayNight(mode) {
+  DAYNIGHT.mode = mode;
+  const b = document.getElementById('btn-daynight');
+  if (b) b.setAttribute('aria-pressed', mode === 'live');
+}
+// The visible Sun sits on the real sun direction (live) or at its composed screen spot (studio)
+function placeSunSprite(k) {
+  if (!sunObj) return;
+  spaceGroup.updateMatrixWorld();
+  const target = DAYNIGHT.mode === 'live' ? spaceGroup.worldToLocal(_dnA.copy(sunDir).multiplyScalar(SUN.dist)) : _dnA.copy(sunObj.home);
+  if (k >= 1) { sunObj.group.position.copy(target); return; }
+  const a = _dnB.copy(sunObj.group.position).normalize(), b = _dnC.copy(target).normalize();
+  sunObj.group.position.copy(slerp(a, b, k)).multiplyScalar(SUN.dist);
+}
+function updateDayNight(dt) {
+  state.sunLon -= dt * DAYNIGHT.degPerSec;          // the sun moves west, so the night shadow sweeps across the globe
+  if (state.sunLon < -180) state.sunLon += 360;
+  sunDir.copy(ll2v(state.sunLat, state.sunLon)).normalize();
+  const right = _dnA.setFromMatrixColumn(camera.matrixWorld, 0), up = _dnB.setFromMatrixColumn(camera.matrixWorld, 1);
+  studioDir.copy(camera.position).normalize().addScaledVector(right, -0.75).addScaledVector(up, 0.45).normalize();
+  const live = DAYNIGHT.mode === 'live', k = 1 - Math.exp(-dt * 3);
+  dnBlend += ((live ? 1 : 0) - dnBlend) * k;
+  lightDir.copy(slerp(studioDir, sunDir, dnBlend));
+  keyLight.position.copy(lightDir).multiplyScalar(10);
+  const mix = (o) => THREE.MathUtils.lerp(o.studio, o.live, dnBlend);
+  keyLight.intensity = mix(DAYNIGHT.key);
+  hemiLight.intensity = mix(DAYNIGHT.fill);
+  if (earthMat) earthMat.emissiveIntensity = mix(DAYNIGHT.lights);
+  EARTH_UNIFORMS.uNightDim.value = mix(DAYNIGHT.nightDim);
+  EARTH_UNIFORMS.uTwilight.value = mix(DAYNIGHT.twilight);
+  placeSunSprite(Math.abs(dnBlend - (live ? 1 : 0)) < 0.002 ? 1 : k * 1.5);
+  const v = _dnC.copy(lightDir).transformDirection(camera.matrixWorldInverse);
+  for (const m of atmoMats) { m.uniforms.uSun.value.copy(v); m.uniforms.uDN.value = dnBlend; }
+}
+
+/* =====================================================================
+   TIMELINE: four stops that morph the network
+   ===================================================================== */
+const eraState = { mode: 'all', value: 0, target: 0, mix: 0, mixTarget: 0 };
+function eraAt(w, v) { const i = Math.min(2, Math.floor(v)), f = v - i; return w[i] * (1 - f) + w[i + 1] * f; }
+function currentWeight(w) { return 1 + (eraAt(w, eraState.value) - 1) * eraState.mix; }
+function computeCityEras() {
+  for (const c of cityObjs) {
+    if (CITY_ERA[c.data.id]) { c.era = CITY_ERA[c.data.id]; continue; }
+    let w = null;
+    for (const e of routeObjs[c.data.route].entries) if (e.ids.includes(c.data.id)) w = w ? w.map((x, i) => Math.max(x, e.era[i])) : e.era.slice();
+    c.era = w || ROUTE_ERA_DEFAULT[c.data.route];
+  }
+}
+function setEra(v, opts = {}) {                     // v = 'all' or a number 0..3
+  if (v === 'all') { eraState.mode = 'all'; eraState.mixTarget = 0; }
+  else {
+    v = THREE.MathUtils.clamp(+v, 0, 3);
+    if (eraState.mode === 'all' && eraState.mix < 0.05) eraState.value = v;
+    eraState.mode = 'era'; eraState.target = v; eraState.mixTarget = 1;
+  }
+  updateTimelineUI(opts.fromSlider);
+  updateEraBanner();
+}
+function updateEraMorph(dt) {
+  const k = 1 - Math.exp(-dt * 4);
+  eraState.value += (eraState.target - eraState.value) * k;
+  eraState.mix += (eraState.mixTarget - eraState.mix) * k;
+  for (const id in routeObjs) for (const e of routeObjs[id].entries) {
+    const w = currentWeight(e.era); e.weight = w;
+    const emph = eraState.mix * THREE.MathUtils.clamp((w - 0.75) / 0.25, 0, 1);
+    for (const m of [e.core, e.glow]) { m.uniforms.uEra.value = w; m.uniforms.uEmph.value = emph; }
+  }
+  for (const c of cityObjs) c.weight = currentWeight(c.era);
+}
+function nearestEra() { return Math.round(eraState.target); }
+function updateTimelineUI(fromSlider) {
+  const all = eraState.mode === 'all';
+  const tl = document.getElementById('timeline'); if (!tl) return;
+  tl.classList.toggle('all', all);
+  const allBtn = document.getElementById('era-all'); allBtn.classList.toggle('on', all); allBtn.setAttribute('aria-pressed', all);
+  if (!fromSlider) document.getElementById('era-range').value = all ? 0 : eraState.target;
+  const n = nearestEra();
+  document.querySelectorAll('#era-ticks button').forEach((b, i) => b.classList.toggle('on', !all && i === n));
+  document.getElementById('era-now').textContent = all ? 'All eras' : ERAS[n].name;
+}
+function updateEraBanner() {
+  const el = document.getElementById('era-banner'); if (!el) return;
+  if (eraState.mode === 'all') { el.classList.remove('show'); _ui = null; return; }
+  const e = ERAS[nearestEra()];
+  el.querySelector('b').textContent = e.name;
+  el.querySelector('span').textContent = e.text || '';
+  el.classList.add('show'); _ui = null;
+}
+function initTimeline() {
+  document.getElementById('era-ticks').innerHTML = ERAS.map((e, i) => `<button data-era="${i}">${e.name}</button>`).join('');
+  const range = document.getElementById('era-range');
+  range.addEventListener('input', () => setEra(parseFloat(range.value), { fromSlider: true }));
+  range.addEventListener('change', () => { setEra(Math.round(parseFloat(range.value))); Sound.chime('tick'); });
+  document.querySelectorAll('#era-ticks button').forEach(b => b.addEventListener('click', () => { setEra(+b.dataset.era); Sound.chime('tick'); }));
+  document.getElementById('era-all').addEventListener('click', () => { setEra('all'); Sound.chime('tick'); });
+  updateTimelineUI();
+}
+
+/* =====================================================================
+   CITY FACT CARD + CINEMATIC FLY-IN
+   ===================================================================== */
+const CITY_LINKS = {};                              // id -> {prev, next, km (along the main road from Chang'an)}
+const EARTH_KM = 6371;
+function gcKm(a, b) { return ll2v(a[0], a[1]).normalize().angleTo(ll2v(b[0], b[1]).normalize()) * EARTH_KM; }
+function computeCityLinks() {
+  let km = 0; const kmAt = {};
+  PATHS.silk[0].p.forEach((p, i, arr) => { if (i) km += gcKm(resolve(arr[i - 1]), resolve(p)); if (typeof p === 'string') kmAt[p] = km; });
+  for (const c of CITIES) {
+    const entries = routeObjs[c.route].entries;
+    const e = entries.find(x => x.tier === 'main' && x.ids.includes(c.id)) || entries.find(x => x.ids.includes(c.id));
+    const i = e ? e.ids.indexOf(c.id) : -1;
+    CITY_LINKS[c.id] = { prev: i > 0 ? e.ids[i - 1] : null, next: e && i < e.ids.length - 1 ? e.ids[i + 1] : null,
+      km: c.route === 'silk' && e === entries[0] ? kmAt[c.id] : null, main: e === entries[0] && c.route === 'silk' };
+  }
+}
+const fmtKm = n => Math.round(n / 10) * 10 >= 1000 ? (Math.round(n / 10) * 10).toLocaleString('en-US') : String(Math.round(n / 10) * 10);
+let selectedCity = null;
+function showCityCard(id) { /* removed — city click zooms only */ selectedCity = id; }
+function hideCityCard() { selectedCity = null; viewShift.ty = 0; }
+let settle = null;                                  // slow push-in after a cinematic arrival
+function setCine(on) { document.body.classList.toggle('cine', !!on); }
+function cinematicFlyToCity(id) {
+  const c = CITY[id], d = window.innerWidth < 760 ? 1.85 : 1.48;
+  const ang = camera.position.clone().normalize().angleTo(ll2v(c.lat, c.lon).normalize());
+  flyTo(c.lat, c.lon, d, 2.0 + Math.min(1.2, ang * 1.3));
+  flight.cine = true; settle = null; setCine(true);
+  flight.onDone = () => { setCine(false); settle = { t: 0, dur: 6, d0: d, d1: d * 0.95 }; };
+}
+function updateSettle(dt) {
+  if (!settle || flight) return;
+  settle.t += dt; const k = Math.min(1, settle.t / settle.dur), e = 1 - Math.pow(1 - k, 2);
+  camera.position.setLength(THREE.MathUtils.lerp(settle.d0, settle.d1, e));
+  if (k >= 1) settle = null;
+}
+// Phone: slide the globe up while the bottom-sheet card is open
+const viewShift = { y: 0, ty: 0 };
+function applyViewOffset() {
+  const host = document.getElementById('globe'), w = host.clientWidth, h = host.clientHeight;
+  if (w < 760) camera.setViewOffset(w, h, 0, h * (0.045 + viewShift.y), w, h);
+  else if (w > 1000) camera.setViewOffset(w, h, -w * 0.11, 0, w, h);
+  else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+function updateViewShift(dt) {
+  if (Math.abs(viewShift.ty - viewShift.y) < 1e-4) return;
+  viewShift.y += (viewShift.ty - viewShift.y) * (1 - Math.exp(-dt * 5));
+  if (Math.abs(viewShift.ty - viewShift.y) < 2e-4) viewShift.y = viewShift.ty;
+  applyViewOffset();
+}
+// Gold light beam + ripples over the selected city
+let beacon = null;
+function createSelectionBeacon() {
+  const g = new THREE.Group(); g.visible = false;
+  const beamGeo = new THREE.CylinderGeometry(0.0012, 0.004, 0.14, 16, 1, true); beamGeo.translate(0, 0.07, 0); beamGeo.rotateX(Math.PI / 2);
+  const beam = new THREE.Mesh(beamGeo, new THREE.ShaderMaterial({
+    uniforms: { uT: { value: 0 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `uniform float uT; varying vec2 vUv; void main(){ float a = pow(1.0 - vUv.y, 1.6) * (0.75 + 0.25 * sin(uT * 4.0));
+      gl_FragColor = vec4(vec3(1.0, 0.86, 0.5) * a, a); }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+  }));
+  const rings = [0, 1].map(() => { const m = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 48),
+    new THREE.MeshBasicMaterial({ color: 0xffd877, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, blending: THREE.AdditiveBlending }));
+    m.position.z = 0.003; g.add(m); return m; });
+  g.add(beam); scene.add(g);
+  beacon = { g, beam, rings };
+}
+function updateSelectionBeacon(t, zs) {
+  if (!beacon) return;
+  const c = selectedCity && CITY[selectedCity];
+  beacon.g.visible = !!c && routeObjs[c.route].visible;
+  if (!beacon.g.visible) return;
+  const n = ll2v(c.lat, c.lon).normalize();
+  beacon.g.position.copy(n).multiplyScalar(R * 1.002);
+  beacon.g.quaternion.setFromUnitVectors(_Z, n);
+  beacon.g.scale.setScalar(Math.max(0.35, zs));
+  beacon.beam.material.uniforms.uT.value = t;
+  beacon.rings.forEach((r, i) => { const k = (t * 0.6 + i * 0.5) % 1; r.scale.setScalar(0.008 + k * 0.03); r.material.opacity = 0.9 * (1 - k); });
+}
+const _Z = new THREE.Vector3(0, 0, 1);
+
+/* ---------- route highlight (hover + focused compare route) ---------- */
+let focusRoute = null;   // 'silk' | 'indian' | 'sahara' | null (Earth overview)
+function setFocusRoute(id) {
+  focusRoute = id && ROUTES[id] ? id : null;
+  refreshRouteHighlight();
+  _ui = null;
+}
+function refreshRouteHighlight() {
+  for (const id in routeObjs) {
+    const hover = hovered && hovered.type === 'route' && hovered.id === id;
+    let hi = 0;
+    if (focusRoute) {
+      // Focused competitor / Silk Road: much brighter + thicker feel; others dim hard
+      // Competitors get a strong glow when chosen (they are dim/dashed by default);
+      // the Silk Road is already the hero line, so it only needs a gentle lift.
+      if (id === focusRoute) hi = id === 'silk' ? 0.35 : 2.0;
+      else hi = -0.8;
+    }
+    if (hover) hi = Math.max(hi, 1.2);
+    routeObjs[id].mats.forEach(m => m.uniforms.uHi.value = hi);
+  }
+}
+
+/* =====================================================================
+   GOODS FLOW: silk, spices and porcelain streaming along the Silk Road
+   (silk + porcelain head west from China; spices come up from India and west)
+   ===================================================================== */
+let goodsFlow = null;                               // {points, parts, lanes, on, fade}
+function paintGoodsAtlas() {                        // 3 little icons side by side: silk bolt, spice sack, porcelain vase
+  const S = 64, c = document.createElement('canvas'); c.width = S * 3; c.height = S;
+  const x = c.getContext('2d');
+  const glow = (cx, col) => { const g = x.createRadialGradient(cx, 32, 0, cx, 32, 32); g.addColorStop(0, col + 'aa'); g.addColorStop(0.5, col + '33'); g.addColorStop(1, col + '00'); x.fillStyle = g; x.fillRect(cx - 32, 0, 64, 64); };
+  // silk: rolled bolt of crimson-pink cloth with a gold band
+  glow(32, '#ff4f8b');
+  x.fillStyle = '#ff5a92'; x.beginPath(); x.roundRect(14, 22, 36, 20, 9); x.fill();
+  x.fillStyle = '#ffb3cc'; x.fillRect(16, 25, 32, 4);
+  x.fillStyle = '#f2c14e'; x.fillRect(29, 21, 6, 22);
+  // spice: saffron sack with a tied neck
+  glow(96, '#ff9a2e');
+  x.fillStyle = '#ff9a2e'; x.beginPath(); x.ellipse(96, 37, 15, 13, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#c25a12'; x.fillRect(90, 19, 12, 8); x.fillStyle = '#ffd08a'; x.beginPath(); x.arc(91, 34, 3, 0, 7); x.arc(101, 40, 2.5, 0, 7); x.fill();
+  // porcelain: blue-and-white vase
+  glow(160, '#9cc4ff');
+  x.fillStyle = '#f4f8ff'; x.beginPath(); x.moveTo(154, 16); x.lineTo(166, 16); x.lineTo(164, 23); x.quadraticCurveTo(178, 32, 168, 48); x.lineTo(152, 48); x.quadraticCurveTo(142, 32, 156, 23); x.closePath(); x.fill();
+  x.strokeStyle = '#2f5fd0'; x.lineWidth = 3; x.beginPath(); x.moveTo(150, 33); x.quadraticCurveTo(160, 28, 170, 33); x.stroke(); x.beginPath(); x.moveTo(152, 41); x.lineTo(168, 41); x.stroke();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.NoColorSpace; return t;
+}
+function buildGoodsLanes() {
+  const lanes = [];
+  routeObjs.silk.entries.forEach((e, idx) => {
+    if (e.tier === 'spur') return;                 // main road + branches only
+    const fromIndia = e.key === 'india' || e.key === [31.61,65.71];
+    lanes.push({ entry: e, line: e.line, len: e.line.L.at(-1), dir: fromIndia ? -1 : 1,
+      mix: fromIndia ? [0.12, 0.78, 0.1] : idx === 0 ? [0.45, 0.17, 0.38] : [0.45, 0.2, 0.35] });
+  });
+  return lanes;
+}
+function createGoodsFlow() {
+  const lanes = buildGoodsLanes(), mobile = window.innerWidth < 760;
+  const parts = [];
+  for (const [li, lane] of lanes.entries()) {
+    const n = Math.max(6, Math.round(lane.len * GOODS_FLOW.perUnit * (mobile ? GOODS_FLOW.mobileFactor : 1)));
+    for (let k = 0; k < n; k++) {
+      const r = Math.random(), type = r < lane.mix[0] ? 0 : r < lane.mix[0] + lane.mix[1] ? 1 : 2;
+      parts.push({ lane: li, s: Math.random() * lane.len, v: THREE.MathUtils.lerp(...GOODS_FLOW.speed, Math.random()), off: (Math.random() * 2 - 1), type });
+    }
+  }
+  const N = parts.length, geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute('aType', new THREE.BufferAttribute(new Float32Array(parts.map(p => p.type)), 1));
+  geo.setAttribute('aAlpha', new THREE.BufferAttribute(new Float32Array(N), 1).setUsage(THREE.DynamicDrawUsage));
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uAtlas: { value: paintGoodsAtlas() }, uSize: { value: GOODS_FLOW.size }, uPR: { value: renderer.getPixelRatio() }, uFade: { value: 0 } },
+    vertexShader: `attribute float aType; attribute float aAlpha; uniform float uSize, uPR, uFade; varying float vType; varying float vA;
+      void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv;
+        gl_PointSize = uSize * uPR * pow(1.0 / max(-mv.z, 0.05), 0.45); vType = aType; vA = aAlpha * uFade; }`,
+    fragmentShader: `uniform sampler2D uAtlas; varying float vType; varying float vA;
+      void main(){ vec4 c = texture2D(uAtlas, vec2((gl_PointCoord.x + vType) / 3.0, 1.0 - gl_PointCoord.y));
+        float a = c.a * vA; if (a < 0.02) discard; gl_FragColor = vec4(c.rgb, a); }`,
+    transparent: true, depthWrite: false
+  });
+  const points = new THREE.Points(geo, mat); points.frustumCulled = false; points.renderOrder = 8; points.visible = false;
+  routeObjs.silk.group.add(points);
+  goodsFlow = { points, parts, lanes, on: false, fade: 0 };
+  document.getElementById('goods-legend').innerHTML = GOODS.map(g => `<span><i style="background:${g.color};color:${g.color}"></i>${g.name}</span>`).join('');
+}
+function setGoodsFlow(on) {
+  goodsFlow.on = on;
+  const b = document.getElementById('btn-goods'); b.setAttribute('aria-pressed', on);
+  document.getElementById('goods-legend').classList.toggle('on', on); _ui = null;
+}
+const _gp = new THREE.Vector3(), _gs = new THREE.Vector3();
+function pointOnLine(line, s, outP, outSide) {      // position + sideways vector at arc length s (binary search)
+  const { unit, L } = line;
+  let lo = 1, hi = L.length - 1;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (L[mid] < s) lo = mid + 1; else hi = mid; }
+  const a = unit[lo - 1], b = unit[lo], t = (s - L[lo - 1]) / Math.max(1e-9, L[lo] - L[lo - 1]);
+  outP.copy(a).lerp(b, t).normalize();
+  outSide.copy(b).sub(a).cross(outP).normalize();
+}
+function updateGoodsFlow(dt, dist) {
+  if (!goodsFlow) return;
+  goodsFlow.fade += ((goodsFlow.on ? 1 : 0) - goodsFlow.fade) * (1 - Math.exp(-dt * 4));
+  const vis = goodsFlow.fade > 0.01;
+  goodsFlow.points.visible = vis;
+  if (!vis) return;
+  const pos = goodsFlow.points.geometry.attributes.position, al = goodsFlow.points.geometry.attributes.aAlpha;
+  const spread = GOODS_FLOW.spread * THREE.MathUtils.clamp((dist - 1) / 1.2, 0.35, 1.4);
+  goodsFlow.parts.forEach((p, i) => {
+    const lane = goodsFlow.lanes[p.lane];
+    p.s += p.v * dt; if (p.s > lane.len) p.s -= lane.len;
+    const along = lane.dir > 0 ? p.s : lane.len - p.s;
+    pointOnLine(lane.line, along, _gp, _gs);
+    _gp.multiplyScalar(R * GOODS_FLOW.lift).addScaledVector(_gs, p.off * spread);
+    pos.setXYZ(i, _gp.x, _gp.y, _gp.z);
+    const endFade = THREE.MathUtils.smoothstep(Math.min(p.s, lane.len - p.s), 0, 0.03);
+    al.setX(i, endFade * (0.1 + 0.9 * lane.entry.weight));
+  });
+  pos.needsUpdate = true; al.needsUpdate = true;
+  goodsFlow.points.material.uniforms.uFade.value = goodsFlow.fade;
+}
+
+/* =====================================================================
+   SOUND: soft caravan ambience (desert wind, low drone, camel bells, padding
+   footsteps) + chimes. Everything is synthesised with Web Audio (no files),
+   MUTED BY DEFAULT; nothing is created until the visitor turns sound on.
+   ===================================================================== */
+const SOUND_MASTER_VOLUME = 0.425;   // v5: halved (was 0.85) — scales wind, drone, bells, footsteps and chimes
+const Sound = {
+  ctx: null, master: null, amb: null, muted: true, ducked: false, timers: [], chimeCount: 0,
+  ensure() {
+    if (this.ctx) return true;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+    this.ctx = new AC();
+    this.master = this.ctx.createGain(); this.master.gain.value = 0; this.master.connect(this.ctx.destination);
+    this.amb = this.ctx.createGain(); this.amb.gain.value = 1; this.amb.connect(this.master);
+    this.buildAmbient();
+    return true;
+  },
+  buildAmbient() {
+    const c = this.ctx, len = c.sampleRate * 4, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    let last = 0; for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.2; }   // brown noise
+    const wind = c.createBufferSource(); wind.buffer = buf; wind.loop = true;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 420; lp.Q.value = 0.6;
+    const lfo = c.createOscillator(), lfoG = c.createGain(); lfo.frequency.value = 0.06; lfoG.gain.value = 220; lfo.connect(lfoG); lfoG.connect(lp.frequency);
+    const wg = c.createGain(); wg.gain.value = 0.35;
+    wind.connect(lp); lp.connect(wg); wg.connect(this.amb); wind.start(); lfo.start();
+    // low drone on D and A (like a distant tanbur), slowly breathing
+    const dl = c.createBiquadFilter(); dl.type = 'lowpass'; dl.frequency.value = 520;
+    const dg = c.createGain(); dg.gain.value = 0.035; dl.connect(dg); dg.connect(this.amb);
+    for (const f of [73.42, 110, 146.83]) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = (Math.random() - 0.5) * 8;
+      const g = c.createGain(); g.gain.value = f > 140 ? 0.25 : 0.5; o.connect(g); g.connect(dl); o.start(); }
+    const tr = c.createOscillator(), trg = c.createGain(); tr.frequency.value = 0.09; trg.gain.value = 0.015; tr.connect(trg); trg.connect(dg.gain); tr.start();
+  },
+  scheduleLoops() {
+    this.clearLoops();
+    const bells = () => { if (this.muted) return; this.bell(700 + Math.random() * 500, 0.05 + Math.random() * 0.04); this.timers.push(setTimeout(bells, 2200 + Math.random() * 4200)); };
+    const steps = () => { if (this.muted) return; this.thump(); this.timers.push(setTimeout(steps, 560 + Math.random() * 140)); };
+    this.timers.push(setTimeout(bells, 900), setTimeout(steps, 300));
+  },
+  clearLoops() { this.timers.forEach(clearTimeout); this.timers = []; },
+  bell(f, vol, when = 0) {                          // bell-like partials with exponential decay
+    if (!this.ctx || this.muted) return;
+    const c = this.ctx, t = c.currentTime + when;
+    [[1, 1, 1.6], [2.76, 0.45, 0.9], [5.4, 0.22, 0.5], [8.93, 0.1, 0.3]].forEach(([m, a, dur]) => {
+      const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = f * m;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * a, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.05);
+    });
+  },
+  thump() {                                         // soft padded camel footstep
+    const c = this.ctx, t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    o.connect(g); g.connect(this.amb); o.start(t); o.stop(t + 0.2);
+  },
+  chime(kind = 'city') {                            // click chimes (silent while muted)
+    if (this.muted || !this.ctx) return;
+    this.chimeCount++;
+    const scale = [587.33, 659.25, 739.99, 880, 987.77, 1174.66];
+    if (kind === 'tick') this.bell(1318.5, 0.05);
+    else if (kind === 'pitch') [0, 2, 4].forEach((n, i) => this.bell(scale[n], 0.07, i * 0.09));
+    else { const n = Math.floor(Math.random() * 3); this.bell(scale[n + 2], 0.09); this.bell(scale[n], 0.06, 0.07); }
+  },
+  setMuted(m) {
+    if (!m && !this.ensure()) return;
+    this.muted = m;
+    if (this.ctx) {
+      const t = this.ctx.currentTime;
+      this.master.gain.cancelScheduledValues(t); this.master.gain.setTargetAtTime(m ? 0 : SOUND_MASTER_VOLUME, t, m ? 0.08 : 0.4);
+      if (!m) { this.ctx.resume(); this.scheduleLoops(); this.chime('tick'); } else { this.clearLoops(); }
+    }
+    const b = document.getElementById('btn-sound');
+    b.setAttribute('aria-pressed', !m);
+    b.setAttribute('aria-label', m ? 'Sound is off. Turn sound on' : 'Sound is on. Mute');
+    b.title = m ? 'Sound is off (click to turn on caravan ambience and chimes)' : 'Sound is on (click to mute)';
+    b.querySelector('.ic').innerHTML = m ? '&#x1F507;' : '&#x1F50A;';
+    b.querySelector('.tx').textContent = m ? 'Sound off' : 'Sound on';
+  },
+  duck(on) { this.ducked = on; if (this.ctx && !this.muted) this.amb.gain.setTargetAtTime(on ? 0.25 : 1, this.ctx.currentTime, 0.5); }
+};
+
+/* =====================================================================
+   CLAIMS / TESTIMONIALS left panel (reads student wording from hidden HTML)
+   ===================================================================== */
+let sidePanel = { mode: null, i: 0 };   // mode: 'claims' | 'voices' | null
+
+function readClaims() {
+  return [...document.querySelectorAll('#claim-source article.claim-data')].map((a, i) => ({
+    num: (a.querySelector('.num') || {}).textContent || `CLAIM ${i + 1}`,
+    title: a.querySelector('h3').textContent.trim(),
+    text: a.querySelector('p.claim').textContent.trim(),
+    cmp: (a.querySelector('.cmp') || {}).innerHTML || ''
+  }));
+}
+function readVoices() {
+  return [...document.querySelectorAll('#voice-source article.voice-data')].map(a => ({
+    quote: a.querySelector('blockquote').textContent.trim(),
+    source: (a.querySelector('.src') || {}).childNodes[0]?.textContent?.trim() || '',
+    detail: (a.querySelector('small') || {}).textContent?.trim() || ''
+  }));
+}
+function openSidePanel(mode, i = 0) {
+  sidePanel.mode = mode; sidePanel.i = i;
+  const panel = document.getElementById('sidepanel');
+  panel.classList.add('open'); panel.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('panel-open');
+  document.getElementById('btn-claims').setAttribute('aria-pressed', mode === 'claims');
+  document.getElementById('btn-voices').setAttribute('aria-pressed', mode === 'voices');
+  document.getElementById('sp-kicker').textContent = mode === 'claims' ? 'Why invest' : 'Primary sources';
+  document.getElementById('sp-heading').textContent = mode === 'claims' ? 'Claims' : 'Testimonials';
+  renderSidePanel();
+  _ui = null;
+}
+function closeSidePanel() {
+  if (!sidePanel.mode) return;
+  sidePanel.mode = null;
+  document.getElementById('sidepanel').classList.remove('open');
+  document.getElementById('sidepanel').setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('panel-open');
+  document.getElementById('btn-claims').setAttribute('aria-pressed', 'false');
+  document.getElementById('btn-voices').setAttribute('aria-pressed', 'false');
+  _ui = null;
+}
+function sideItems() {
+  return sidePanel.mode === 'claims' ? readClaims() : sidePanel.mode === 'voices' ? readVoices() : [];
+}
+function renderSidePanel() {
+  const items = sideItems(); if (!items.length) return;
+  sidePanel.i = ((sidePanel.i % items.length) + items.length) % items.length;
+  const it = items[sidePanel.i];
+  const body = document.getElementById('sp-body');
+  if (sidePanel.mode === 'claims') {
+    body.innerHTML = `<div class="sp-num">${it.num}</div>
+      <div class="sp-title">${it.title}</div>
+      <p class="sp-text">${it.text}</p>
+      <div class="sp-cmp">${it.cmp}</div>`;
+  } else {
+    body.innerHTML = `<p class="sp-quote">${it.quote}</p>
+      <div class="sp-src">${it.source}<small>${it.detail}</small></div>`;
+  }
+  document.getElementById('sp-page').textContent = `${sidePanel.i + 1} / ${items.length}`;
+  document.getElementById('sp-prev').disabled = items.length < 2;
+  document.getElementById('sp-next').disabled = items.length < 2;
+  body.scrollTop = 0;
+}
+function stepSidePanel(dir) {
+  if (!sidePanel.mode) return;
+  sidePanel.i += dir; renderSidePanel();
+}
+
+/* =====================================================================
+   WIRING for feature controls
+   ===================================================================== */
+function initFeatureUI() {
+  initTimeline();
+  const on = (id, fn) => document.getElementById(id).addEventListener('click', fn);
+  on('btn-claims', () => sidePanel.mode === 'claims' ? closeSidePanel() : openSidePanel('claims', 0));
+  on('btn-voices', () => sidePanel.mode === 'voices' ? closeSidePanel() : openSidePanel('voices', 0));
+  on('sp-close', () => closeSidePanel());
+  on('sp-prev', () => { stepSidePanel(-1); Sound.chime('tick'); });
+  on('sp-next', () => { stepSidePanel(1); Sound.chime('tick'); });
+  on('btn-goods', () => { setGoodsFlow(!goodsFlow.on); Sound.chime('tick'); });
+  on('btn-daynight', () => { setDayNight(DAYNIGHT.mode === 'live' ? 'studio' : 'live'); Sound.chime('tick'); });
+  on('btn-sound', () => Sound.setMuted(!Sound.muted));
+  document.querySelectorAll('.fly button').forEach(b => b.addEventListener('click', () => Sound.chime('tick')));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeSidePanel();
+    if (!sidePanel.mode) return;
+    if (e.key === 'ArrowLeft') stepSidePanel(-1);
+    if (e.key === 'ArrowRight') stepSidePanel(1);
+  });
+}
+
+/* ---------- MAIN LOOP ---------- */
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1), t = clock.elapsedTime;
+  updateViewShift(dt);
+  updateSettle(dt);
+  if (autoRotate && !flight) {
+    const ll = v2ll(camera.position); const d = camera.position.length();
+    camera.position.copy(ll2v(ll.lat, ll.lon - dt * 1.6, d));   // gentle drift westward-to-east view
+    // turn the stars/planets with the camera so it reads as the Earth spinning under a still sky
+    spaceGroup.rotation.y -= THREE.MathUtils.degToRad(dt * 1.6);
+  }
+  updateFlight(dt);
+  controls.enabled = !flight;
+  if (!flight) controls.update();
+  const dist = camera.position.length();
+  camera.lookAt(0, 0, 0); camera.rotateX(tiltFor(dist)); camera.updateMatrixWorld();
+  // keep routes and beacons a sensible on-screen size at every zoom level
+  const zs = THREE.MathUtils.clamp(Math.pow((dist - 1) / 2.2, 0.75), 0.22, 1.3);
+  for (const id in routeObjs) {
+    const boost = focusRoute === id ? (id === 'silk' ? 1.0 : 1.6) : focusRoute ? 0.72 : 1;
+    routeObjs[id].mats.forEach(m => m.uniforms.uS.value = zs * boost);
+  }
+  updateEraMorph(dt);
+  for (const c of cityObjs) c.group.scale.setScalar(Math.max(0.3, zs) * (0.35 + 0.65 * c.weight));
+
+  // Sun: real moving sun (day/night + city lights) or the classic camera-follow studio light
+  updateDayNight(dt);
+
+  if (clouds) clouds.rotation.y += dt * 0.004;
+  updateSpace(dt, t);
+  for (const id in routeObjs) routeObjs[id].mats.forEach(m => m.uniforms.uTime.value = t);
+  for (const c of cityObjs) {
+    const k = (t * 0.55 + c.phase) % 1;
+    const base = c.data.route === 'silk' ? 0.012 : 0.008;
+    c.ring.scale.setScalar(base * (0.6 + k * 1.8));
+    c.ring.material.opacity = 0.85 * (1 - k) * c.weight;
+    c.spr.material.opacity = c.sprBase * (0.15 + 0.85 * c.weight);
+  }
+
+  updateCaravan(dt, t, dist);
+  updateDhow(dt, t, dist);
+  updateGoodsFlow(dt, dist);
+  updateSelectionBeacon(t, zs);
+
+  renderer.render(scene, camera);
+  updateLabels();
+  labelRenderer.render(scene, camera);
+}
+
+/* ---------- START ---------- */
+window.silk = { selected: null, state, ready: false };
+initThree();
+createSpace();
+createRoutes();
+createCaravan();
+computeCityEras();
+computeCityLinks();
+createGoodsFlow();
+createSelectionBeacon();
+initDayNight();
+initUI();
+initFeatureUI();
+animate();
+createGlobe().then(() => {
+  document.getElementById('loading').classList.add('done');
+  window.silk.ready = true;
+});
+
+// Test/debug helpers
+Object.assign(window.silk, {
+  flyTo, showInfo,
+  cityScreen(id) {
+    const c = cityObjs.find(o => o.data.id === id); _v.copy(c.label.position).project(camera);
+    const r = renderer.domElement.getBoundingClientRect();
+    return { x: r.left + (_v.x + 1) / 2 * r.width, y: r.top + (1 - _v.y) / 2 * r.height };
+  },
+  setCaravan(s) { caravanSys.caravans[0].s = s; },
+  caravanScreen(n = 0) {
+    const r = renderer.domElement.getBoundingClientRect(), cv = caravanSys.caravans[n]; _w.copy(cv.lead); _v.copy(_w).project(camera);
+    return { x: Math.round(r.left + (_v.x + 1) / 2 * r.width), y: Math.round(r.top + (1 - _v.y) / 2 * r.height), s: cv.s, hidden: _w.clone().normalize().dot(camera.position.clone().normalize()) < 0.15 };
+  },
+  sunLL: () => [state.sunLat, state.sunLon],
+  overviewDist: () => overviewDist,
+  caravanCount: () => ({ caravans: caravanSys.caravans.length, camels: caravanSys.total }),
+  caravansOnScreen() {
+    const camDir = camera.position.clone().normalize();
+    return caravanSys.caravans.map((cv, n) => { _w.copy(cv.lead); _v.copy(_w).project(camera); return { n, path: cv.spec.path, s: +cv.s.toFixed(3), visible: _w.clone().normalize().dot(camDir) > 0.2 && Math.abs(_v.x) < 1 && Math.abs(_v.y) < 1 }; });
+  },
+  sunScreen() {
+    const r = renderer.domElement.getBoundingClientRect(); sunObj.group.getWorldPosition(_w); _v.copy(_w).project(camera);
+    return { x: Math.round(r.left + (_v.x + 1) / 2 * r.width), y: Math.round(r.top + (1 - _v.y) / 2 * r.height), hidden: hiddenByEarth(_w) };
+  },
+  camDist: () => camera.position.length(),
+  selectCity, setEra, setGoodsFlow, setDayNight, setFocusRoute, openSidePanel, closeSidePanel,
+  eraState: () => ({ ...eraState }),
+  goodsVisible: () => goodsFlow ? goodsFlow.points.visible && goodsFlow.fade > 0.5 : false,
+  goodsCount: () => goodsFlow ? goodsFlow.parts.length : 0,
+  sunInfo: () => { const camDir = camera.position.clone().normalize(); return { mode: DAYNIGHT.mode, sunLon: state.sunLon, litFacing: +lightDir.dot(camDir).toFixed(3), sunScreen: window.silk.sunScreen() }; },
+  sidePanelState: () => ({ ...sidePanel }),
+  soundState: () => ({ muted: Sound.muted, ctx: Sound.ctx ? Sound.ctx.state : 'none', chimes: Sound.chimeCount, masterVolume: SOUND_MASTER_VOLUME, masterGain: Sound.master ? +Sound.master.gain.value.toFixed(4) : 0 }),
+  focusRoute: () => focusRoute,
+  labeledCities: () => CITIES.filter(c => c.label).map(c => ({ id: c.id, name: c.name, route: c.route })),
+  cityCardOpen: () => false,
+  routeVisible: id => routeObjs[id].group.visible,
+  isFlying: () => !!flight,
+  planetScreen() {
+    const r = renderer.domElement.getBoundingClientRect();
+    return planetObjs.map(p => { p.group.getWorldPosition(_w); _v.copy(_w).project(camera);
+      return { id: p.spec.id, x: Math.round(r.left + (_v.x + 1) / 2 * r.width), y: Math.round(r.top + (1 - _v.y) / 2 * r.height), hidden: hiddenByEarth(_w) }; });
+  }
+});
+</script>
+</body>
+</html>
